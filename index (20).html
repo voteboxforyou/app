@@ -1,0 +1,1936 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ভোটবক্স — স্বচ্ছ ভোটিং প্ল্যাটফর্ম</title>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
+<!-- EmailJS -->
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+:root{
+  --bg:#080c18;--surface:#0f1729;--surface2:#162035;--border:#1c2d47;
+  --accent:#3b82f6;--accent2:#6366f1;--green:#10b981;--red:#ef4444;--amber:#f59e0b;
+  --text:#e2e8f0;--text2:#94a3b8;--text3:#3d5470;
+  --glow:0 0 40px rgba(59,130,246,0.12);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Hind Siliguri',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 60% 40% at 15% 5%,rgba(59,130,246,0.07) 0%,transparent 100%),
+             radial-gradient(ellipse 50% 40% at 85% 90%,rgba(99,102,241,0.05) 0%,transparent 100%);}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:100;height:60px;padding:0 1.5rem;
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(8,12,24,0.88);backdrop-filter:blur(18px);
+  border-bottom:1px solid var(--border);}
+.logo{font-family:'Sora',sans-serif;font-weight:800;font-size:1.3rem;display:flex;align-items:center;gap:.45rem;
+  background:linear-gradient(130deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.logo em{font-style:normal;-webkit-text-fill-color:initial;font-size:1.4rem;}
+.nav-r{display:flex;align-items:center;gap:.6rem;}
+.avatar{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:700;color:#fff;flex-shrink:0;}
+.pill{display:inline-flex;align-items:center;gap:.35rem;padding:.3rem .75rem;border-radius:999px;
+  font-size:.78rem;font-weight:600;border:1px solid transparent;}
+.pill-user{background:var(--surface2);border-color:var(--border);color:var(--text2);}
+.pill-admin{background:rgba(245,158,11,0.12);border-color:rgba(245,158,11,0.3);color:var(--amber);}
+.pill-verified{background:rgba(16,185,129,0.1);border-color:rgba(16,185,129,0.25);color:var(--green);font-size:.7rem;}
+
+/* LAYOUT */
+.container{max-width:1080px;margin:0 auto;padding:1.75rem 1.5rem;position:relative;z-index:1;}
+.page{display:none;}.page.active{display:block;}
+
+/* FORMS */
+.form-group{margin-bottom:.9rem;}
+label{display:block;font-size:.82rem;color:var(--text2);margin-bottom:.35rem;font-weight:500;}
+label span.req{color:var(--red);margin-left:2px;}
+input,select,textarea{width:100%;background:var(--surface2);border:1px solid var(--border);
+  border-radius:9px;padding:.6rem .85rem;color:var(--text);
+  font-family:'Hind Siliguri',sans-serif;font-size:.92rem;outline:none;
+  transition:border-color .2s,box-shadow .2s;}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(59,130,246,0.1);}
+input[readonly]{background:rgba(59,130,246,0.05);border-color:rgba(59,130,246,0.2);color:var(--text2);cursor:default;}
+textarea{resize:vertical;min-height:72px;line-height:1.5;}
+select option{background:var(--surface);}
+.field-err{border-color:var(--red)!important;}
+.err-msg{font-size:.78rem;color:var(--red);margin-top:.3rem;}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.45rem;
+  padding:.6rem 1.3rem;border-radius:9px;border:none;
+  font-family:'Hind Siliguri',sans-serif;font-size:.9rem;font-weight:600;
+  cursor:pointer;transition:all .18s;white-space:nowrap;}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;
+  box-shadow:0 4px 14px rgba(59,130,246,0.28);}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(59,130,246,0.38);}
+.btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border);}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
+.btn-red{background:rgba(239,68,68,0.12);color:var(--red);border:1px solid rgba(239,68,68,0.25);}
+.btn-red:hover{background:var(--red);color:#fff;}
+.btn-green{background:rgba(16,185,129,0.12);color:var(--green);border:1px solid rgba(16,185,129,0.25);}
+.btn-green:hover{background:var(--green);color:#fff;}
+.btn-amber{background:rgba(245,158,11,0.12);color:var(--amber);border:1px solid rgba(245,158,11,0.25);}
+.btn-amber:hover{background:var(--amber);color:#fff;}
+.btn-full{width:100%;}
+.btn-sm{padding:.35rem .8rem;font-size:.8rem;border-radius:7px;}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none!important;box-shadow:none!important;}
+
+/* AUTH */
+.auth-wrap{min-height:calc(100vh - 60px);display:flex;align-items:center;justify-content:center;padding:2rem;}
+.auth-card{width:100%;max-width:440px;background:var(--surface);border:1px solid var(--border);
+  border-radius:18px;padding:2.2rem;box-shadow:var(--glow);}
+.auth-title{font-family:'Sora',sans-serif;font-size:1.65rem;font-weight:800;text-align:center;margin-bottom:.4rem;}
+.auth-sub{color:var(--text2);text-align:center;font-size:.87rem;margin-bottom:1.8rem;line-height:1.5;}
+.auth-tabs{display:flex;gap:.4rem;background:var(--surface2);border-radius:9px;padding:.25rem;margin-bottom:1.4rem;}
+.auth-tab{flex:1;padding:.55rem;border:none;background:transparent;color:var(--text2);
+  border-radius:7px;cursor:pointer;font-family:'Hind Siliguri',sans-serif;font-size:.88rem;transition:all .2s;}
+.auth-tab.active{background:var(--accent);color:#fff;font-weight:600;}
+
+/* NOTICE / WARNING */
+.notice{border-radius:10px;padding:.75rem 1rem;font-size:.82rem;line-height:1.55;margin-bottom:1rem;
+  display:flex;gap:.6rem;align-items:flex-start;}
+.notice-warn{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.22);color:var(--amber);}
+.notice-red{background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.2);color:var(--red);}
+.notice-blue{background:rgba(59,130,246,0.07);border:1px solid rgba(59,130,246,0.18);color:#7aa8f0;}
+.notice-green{background:rgba(16,185,129,0.07);border:1px solid rgba(16,185,129,0.2);color:var(--green);}
+
+/* DASHBOARD HEADER */
+.dash-hd{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.6rem;flex-wrap:wrap;gap:1rem;}
+.dash-title{font-family:'Sora',sans-serif;font-size:1.5rem;font-weight:700;}
+.dash-sub{color:var(--text2);font-size:.87rem;margin-top:.2rem;}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:.9rem;margin-bottom:1.75rem;}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:13px;
+  padding:1.1rem 1rem;display:flex;align-items:center;gap:.9rem;
+  transition:border-color .2s,transform .2s;}
+.stat:hover{border-color:var(--accent);transform:translateY(-2px);}
+.stat-ico{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0;}
+.ico-b{background:rgba(59,130,246,0.13);}
+.ico-g{background:rgba(16,185,129,0.13);}
+.ico-p{background:rgba(99,102,241,0.13);}
+.ico-a{background:rgba(245,158,11,0.13);}
+.stat-val{font-family:'Sora',sans-serif;font-size:1.55rem;font-weight:700;line-height:1;}
+.stat-lbl{font-size:.75rem;color:var(--text2);margin-top:.15rem;}
+
+/* TABS */
+.tab-row{display:flex;gap:.4rem;border-bottom:1px solid var(--border);margin-bottom:1.4rem;overflow-x:auto;}
+.tab-btn{padding:.6rem 1rem;border:none;background:transparent;color:var(--text2);cursor:pointer;
+  font-family:'Hind Siliguri',sans-serif;font-size:.87rem;font-weight:500;
+  border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
+.tab-btn:hover{color:var(--text);}
+
+/* VOTE CARDS */
+.votes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.1rem;}
+.vcard{background:var(--surface);border:1px solid var(--border);border-radius:14px;
+  padding:1.25rem;cursor:pointer;position:relative;overflow:hidden;
+  transition:border-color .2s,box-shadow .2s,transform .2s;}
+.vcard::after{content:'';position:absolute;top:0;left:0;right:0;height:2.5px;
+  background:linear-gradient(90deg,var(--accent),var(--accent2));opacity:0;transition:opacity .2s;}
+.vcard:hover{border-color:var(--accent);box-shadow:var(--glow);transform:translateY(-2px);}
+.vcard:hover::after{opacity:1;}
+.vcard-hd{display:flex;align-items:flex-start;justify-content:space-between;gap:.75rem;margin-bottom:.65rem;}
+.vcard-title{font-family:'Sora',sans-serif;font-size:1rem;font-weight:700;line-height:1.3;}
+.vstatus{font-size:.7rem;font-weight:700;padding:.22rem .55rem;border-radius:999px;white-space:nowrap;flex-shrink:0;}
+.vs-active{background:rgba(16,185,129,0.13);color:var(--green);border:1px solid rgba(16,185,129,0.22);}
+.vs-closed{background:rgba(239,68,68,0.1);color:var(--red);border:1px solid rgba(239,68,68,0.18);}
+.vs-pending{background:rgba(245,158,11,0.1);color:var(--amber);border:1px solid rgba(245,158,11,0.18);}
+.vmeta{font-size:.77rem;color:var(--text2);display:flex;flex-wrap:wrap;gap:.4rem .85rem;margin-bottom:.6rem;}
+.vdesc{font-size:.82rem;color:var(--text2);margin-bottom:.8rem;line-height:1.5;}
+.vcands{display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:.85rem;}
+.cand-pill{background:var(--surface2);border:1px solid var(--border);
+  padding:.2rem .55rem;border-radius:999px;font-size:.74rem;color:var(--text2);}
+.vfoot{display:flex;align-items:center;justify-content:space-between;gap:.5rem;}
+.vcount{font-size:.75rem;color:var(--text2);}
+.chip{display:inline-flex;align-items:center;gap:.25rem;
+  background:var(--surface2);border:1px solid var(--border);
+  padding:.18rem .55rem;border-radius:6px;font-size:.73rem;color:var(--text2);}
+.chip-green{border-color:rgba(16,185,129,0.25);color:var(--green);}
+.chip-blue{border-color:rgba(59,130,246,0.25);color:var(--accent);}
+.prog-wrap{background:var(--surface2);border-radius:999px;height:4px;margin:.25rem 0;overflow:hidden;}
+.prog-bar{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .5s ease;}
+
+/* MODAL */
+.moverlay{display:none;position:fixed;inset:0;z-index:200;
+  background:rgba(0,0,0,0.72);backdrop-filter:blur(5px);
+  align-items:center;justify-content:center;padding:1rem;}
+.moverlay.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:18px;
+  width:100%;max-width:560px;max-height:90vh;overflow-y:auto;
+  box-shadow:0 30px 70px rgba(0,0,0,0.55);animation:mIn .22s ease;}
+@keyframes mIn{from{opacity:0;transform:scale(.96) translateY(8px);}}
+.modal-wide{max-width:680px;}
+.mhd{display:flex;align-items:center;justify-content:space-between;padding:1.4rem 1.4rem 0;}
+.mtitle{font-family:'Sora',sans-serif;font-size:1.15rem;font-weight:700;}
+.mclose{background:var(--surface2);border:1px solid var(--border);color:var(--text2);
+  width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:.95rem;transition:all .18s;}
+.mclose:hover{background:var(--red);color:#fff;border-color:var(--red);}
+.mbody{padding:1.4rem;}
+.mfoot{padding:0 1.4rem 1.4rem;display:flex;gap:.6rem;justify-content:flex-end;flex-wrap:wrap;}
+
+/* CANDIDATE INPUT ROW */
+.cand-list{display:flex;flex-direction:column;gap:.45rem;margin-bottom:.5rem;}
+.cand-row{display:flex;gap:.45rem;align-items:center;}
+.cand-row input{flex:1;}
+.rm-btn{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:var(--red);
+  width:34px;height:34px;border-radius:7px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .18s;}
+.rm-btn:hover{background:var(--red);color:#fff;}
+
+/* VOTE DETAIL */
+.vd-title{font-family:'Sora',sans-serif;font-size:1.35rem;font-weight:700;margin-bottom:.45rem;}
+.cand-vote-list{display:flex;flex-direction:column;gap:.65rem;margin:1rem 0;}
+.cvi{background:var(--surface2);border:1px solid var(--border);border-radius:11px;
+  padding:.9rem 1rem;transition:border-color .2s,background .2s;cursor:pointer;}
+.cvi:hover{border-color:var(--accent);background:rgba(59,130,246,0.05);}
+.cvi.selected{border-color:var(--accent);background:rgba(59,130,246,0.09);}
+.cvi.my-vote{border-color:var(--green);}
+.cvi.no-pointer{cursor:default;}
+.cvi.no-pointer:hover{border-color:var(--border);background:var(--surface2);}
+.cn-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:.35rem;}
+.cn-name{font-weight:600;font-size:.92rem;}
+.cn-pct{font-family:'Sora',sans-serif;font-size:.82rem;font-weight:600;color:var(--text2);}
+.cn-bar-wrap{background:var(--border);border-radius:999px;height:5px;overflow:hidden;}
+.cn-bar{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .55s ease;}
+.cn-bar.top{background:linear-gradient(90deg,var(--green),#05d198);}
+
+/* VOTER LIST */
+.voter-section{border-top:1px solid var(--border);margin-top:1.2rem;padding-top:1rem;}
+.voter-section-title{font-size:.85rem;font-weight:700;color:var(--text2);margin-bottom:.7rem;}
+.voter-table-wrap{overflow-x:auto;border-radius:9px;border:1px solid var(--border);}
+.vtbl{width:100%;border-collapse:collapse;}
+.vtbl th{padding:.55rem .75rem;text-align:left;font-size:.72rem;color:var(--text2);
+  font-weight:600;letter-spacing:.4px;text-transform:uppercase;background:var(--surface2);}
+.vtbl td{padding:.55rem .75rem;border-top:1px solid var(--border);font-size:.78rem;vertical-align:middle;}
+
+/* ADMIN TABLE */
+.tbl-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--border);}
+table.admin-tbl{width:100%;border-collapse:collapse;}
+table.admin-tbl thead{background:var(--surface2);}
+table.admin-tbl th{padding:.75rem 1rem;text-align:left;font-size:.77rem;color:var(--text2);
+  font-weight:600;letter-spacing:.4px;text-transform:uppercase;}
+table.admin-tbl td{padding:.75rem 1rem;border-top:1px solid var(--border);font-size:.85rem;vertical-align:middle;}
+table.admin-tbl tr:hover td{background:rgba(59,130,246,0.025);}
+.empty-row td{text-align:center;color:var(--text3);padding:2.5rem;}
+
+/* UID CHIP */
+.uid-chip{display:inline-flex;align-items:center;gap:.25rem;
+  background:rgba(16,185,129,0.07);border:1px solid rgba(16,185,129,0.18);
+  padding:.18rem .5rem;border-radius:5px;font-size:.72rem;color:var(--green);font-family:monospace;}
+
+/* STATUS BADGES */
+.badge-pending{background:rgba(245,158,11,0.1);color:var(--amber);border:1px solid rgba(245,158,11,0.25);padding:.2rem .55rem;border-radius:999px;font-size:.72rem;font-weight:700;}
+.badge-approved{background:rgba(16,185,129,0.1);color:var(--green);border:1px solid rgba(16,185,129,0.25);padding:.2rem .55rem;border-radius:999px;font-size:.72rem;font-weight:700;}
+
+/* IDENTITY BADGE */
+.id-badge{display:flex;align-items:center;gap:.5rem;
+  background:rgba(16,185,129,0.07);border:1px solid rgba(16,185,129,0.2);
+  border-radius:8px;padding:.5rem .8rem;font-size:.78rem;color:var(--green);}
+
+/* TOAST */
+#toasts{position:fixed;bottom:1.2rem;right:1.2rem;z-index:999;display:flex;flex-direction:column;gap:.45rem;}
+.toast{background:var(--surface);border:1px solid var(--border);border-radius:11px;
+  padding:.7rem 1.1rem;display:flex;align-items:center;gap:.55rem;
+  font-size:.85rem;box-shadow:0 8px 26px rgba(0,0,0,0.35);animation:tIn .28s ease;
+  min-width:220px;max-width:320px;}
+@keyframes tIn{from{opacity:0;transform:translateX(18px);}}
+.toast.ok{border-color:rgba(16,185,129,0.28);}
+.toast.err{border-color:rgba(239,68,68,0.28);}
+.toast.inf{border-color:rgba(59,130,246,0.28);}
+
+/* LINK BOX */
+.link-box{background:var(--surface2);border:1px solid var(--border);border-radius:9px;
+  padding:.6rem .85rem;font-family:monospace;font-size:.8rem;color:var(--accent);
+  word-break:break-all;display:flex;align-items:center;justify-content:space-between;gap:.5rem;}
+
+/* SETUP */
+.setup-box{background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.2);
+  border-radius:13px;padding:1.1rem 1.4rem;margin-bottom:1.4rem;
+  display:flex;align-items:flex-start;gap:.9rem;}
+.setup-box h3{font-size:.95rem;font-weight:700;color:var(--amber);margin-bottom:.25rem;}
+.setup-box p{font-size:.8rem;color:var(--text2);line-height:1.55;}
+pre.script-code{background:var(--bg);border:1px solid var(--border);border-radius:8px;
+  padding:1rem;margin-top:.7rem;font-size:.7rem;overflow-x:auto;
+  color:var(--text2);line-height:1.5;white-space:pre;}
+
+/* EMAILJS CONFIG BOX */
+.config-box{background:rgba(59,130,246,0.05);border:1px solid rgba(59,130,246,0.2);
+  border-radius:13px;padding:1.1rem 1.4rem;margin-bottom:1rem;}
+.config-box h3{font-size:.9rem;font-weight:700;color:var(--accent);margin-bottom:.7rem;}
+.config-row{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin-bottom:.5rem;}
+
+/* SECTION TITLE */
+.sec-title{font-family:'Sora',sans-serif;font-size:1.05rem;font-weight:700;
+  margin-bottom:.9rem;display:flex;align-items:center;gap:.45rem;}
+.divider{height:1px;background:var(--border);margin:1.1rem 0;}
+.flex-gap{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;}
+.mt1{margin-top:.45rem;}.mt2{margin-top:.9rem;}.mt3{margin-top:1.4rem;}
+.hidden{display:none!important;}
+
+/* REGISTRATION PAGE */
+.reg-wrap{min-height:calc(100vh - 60px);display:flex;align-items:center;justify-content:center;padding:2rem;}
+.reg-card{width:100%;max-width:480px;background:var(--surface);border:1px solid var(--border);
+  border-radius:18px;padding:2.2rem;box-shadow:var(--glow);}
+
+@media(max-width:600px){
+  nav{padding:0 1rem;}
+  .container{padding:1.2rem 1rem;}
+  .votes-grid{grid-template-columns:1fr;}
+  .stats-row{grid-template-columns:repeat(2,1fr);}
+  .auth-card{padding:1.4rem;}
+  .modal{border-radius:14px;}
+  .config-row{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== NAV ===== -->
+<nav>
+  <div class="logo"><em>🗳️</em> ভোটবক্স</div>
+  <div class="nav-r" id="navR">
+    <button class="btn btn-ghost btn-sm" onclick="showPage('auth')">লগইন</button>
+  </div>
+</nav>
+
+<div id="toasts"></div>
+
+<!-- ============================================================
+     PUBLIC REGISTRATION PAGE (ইনভাইট লিংক থেকে আসে)
+============================================================ -->
+<div class="page" id="page-register">
+  <div class="reg-wrap">
+    <div class="reg-card">
+      <div class="auth-title">📋 ভোটার রেজিস্ট্রেশন</div>
+      <div class="auth-sub" id="regVoteTitle">ভোটে অংশ নিতে আপনার তথ্য দিয়ে রেজিস্ট্রেশন করুন।<br>এডমিন অনুমোদনের পর ইমেইলে আইডি পাবেন।</div>
+      <div class="notice notice-blue" style="font-size:.79rem;margin-bottom:1.2rem">
+        <span>ℹ️</span><span>রেজিস্ট্রেশনের পর এডমিন আপনাকে অনুমোদন করলে ইমেইলে আপনার <strong>নাম ও ইউনিক আইডি</strong> পাঠানো হবে। সেই আইডি দিয়ে ভোট দিতে পারবেন।</span>
+      </div>
+      <div id="regLinkInfo" class="notice notice-warn hidden" style="font-size:.79rem;margin-bottom:1rem">
+        <span>⚠️</span><span id="regLinkMsg"></span>
+      </div>
+      <div class="form-group">
+        <label>পূর্ণ নাম <span class="req">*</span></label>
+        <input type="text" id="pubName" placeholder="আপনার পূর্ণ নাম">
+      </div>
+      <div class="form-group">
+        <label>ইমেইল ঠিকানা <span class="req">*</span></label>
+        <input type="email" id="pubEmail" placeholder="আপনার ইমেইল">
+      </div>
+      <div class="form-group">
+        <label>মোবাইল নম্বর <span class="req">*</span></label>
+        <input type="tel" id="pubMobile" placeholder="01XXXXXXXXX">
+      </div>
+      <input type="hidden" id="pubVoteId">
+      <button class="btn btn-primary btn-full mt2" onclick="submitPublicReg()">রেজিস্ট্রেশন করুন →</button>
+      <div class="divider"></div>
+      <p style="text-align:center;font-size:.79rem;color:var(--text3)">
+        ইতিমধ্যে আইডি আছে? <span style="color:var(--accent);cursor:pointer" onclick="showPage('auth')">লগইন করুন</span>
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     AUTH PAGE
+============================================================ -->
+<div class="page active" id="page-auth">
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-title">স্বাগতম 👋</div>
+      <div class="auth-sub">স্বচ্ছ ও নিরাপদ ভোটিং প্ল্যাটফর্মে আপনাকে স্বাগত।</div>
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="atLogin"  onclick="authTab('login')">লগইন</button>
+        <button class="auth-tab"        id="atSignup" onclick="authTab('signup')">নতুন অ্যাকাউন্ট</button>
+        <button class="auth-tab"        id="atUid"    onclick="authTab('uid')">UID দিয়ে ভোট</button>
+      </div>
+
+      <!-- LOGIN FORM -->
+      <div id="loginForm">
+        <div class="notice notice-blue" style="font-size:.79rem">
+          <span>🔐</span><span>এই লগইন শুধুমাত্র <strong>এডমিন ও ভোট তৈরিকারীদের</strong> জন্য।</span>
+        </div>
+        <div class="form-group">
+          <label>ইমেইল <span class="req">*</span></label>
+          <input type="email" id="lEmail" placeholder="আপনার ইমেইল" onkeydown="if(event.key==='Enter')doLogin()">
+        </div>
+        <div class="form-group">
+          <label>পাসওয়ার্ড <span class="req">*</span></label>
+          <input type="password" id="lPass" placeholder="পাসওয়ার্ড" onkeydown="if(event.key==='Enter')doLogin()">
+        </div>
+        <button class="btn btn-primary btn-full mt2" onclick="doLogin()">লগইন করুন</button>
+        <div class="divider"></div>
+        <p style="text-align:center;font-size:.79rem;color:var(--text2)">
+          অ্যাকাউন্ট নেই? <span style="color:var(--accent);cursor:pointer;font-weight:600" onclick="authTab('signup')">নতুন অ্যাকাউন্ট খুলুন →</span>
+        </p>
+      </div>
+
+      <!-- SIGNUP FORM (ভোট তৈরিকারী) -->
+      <div id="signupForm" class="hidden">
+        <div class="notice notice-blue" style="font-size:.79rem;margin-bottom:.9rem">
+          <span>✏️</span><span>ভোট তৈরিকারী হিসেবে অ্যাকাউন্ট তৈরি করুন। এডমিন অনুমোদনের পর সক্রিয় হবে।</span>
+        </div>
+        <div class="form-group">
+          <label>পূর্ণ নাম <span class="req">*</span></label>
+          <input type="text" id="suName" placeholder="আপনার পূর্ণ নাম">
+        </div>
+        <div class="form-group">
+          <label>ইমেইল <span class="req">*</span></label>
+          <input type="email" id="suEmail" placeholder="আপনার ইমেইল">
+        </div>
+        <div class="form-group">
+          <label>মোবাইল নম্বর <span class="req">*</span></label>
+          <input type="tel" id="suMobile" placeholder="01XXXXXXXXX">
+        </div>
+        <div class="form-group">
+          <label>ঠিকানা</label>
+          <input type="text" id="suAddress" placeholder="বিভাগ / জেলা / উপজেলা">
+        </div>
+        <div class="form-group">
+          <label>প্রতিষ্ঠান / সংগঠন (ঐচ্ছিক)</label>
+          <input type="text" id="suOrg" placeholder="যেমন: বাংলাদেশ ইসলামী ছাত্রসেনা">
+        </div>
+        <div class="form-group">
+          <label>পাসওয়ার্ড <span class="req">*</span></label>
+          <input type="password" id="suPass" placeholder="কমপক্ষে ৬ অক্ষর">
+        </div>
+        <div class="form-group">
+          <label>পাসওয়ার্ড নিশ্চিত করুন <span class="req">*</span></label>
+          <input type="password" id="suPass2" placeholder="আবার পাসওয়ার্ড দিন">
+        </div>
+        <button class="btn btn-primary btn-full mt2" onclick="doSignup()">অ্যাকাউন্ট তৈরি করুন →</button>
+        <div class="divider"></div>
+        <p style="text-align:center;font-size:.79rem;color:var(--text2)">
+          আগেই অ্যাকাউন্ট আছে? <span style="color:var(--accent);cursor:pointer;font-weight:600" onclick="authTab('login')">লগইন করুন</span>
+        </p>
+      </div>
+
+      <!-- UID LOGIN (ভোটারদের জন্য) -->
+      <div id="uidForm" class="hidden">
+        <div class="notice notice-green" style="font-size:.79rem">
+          <span>✉️</span><span>ইমেইলে পাওয়া <strong>ইউনিক আইডি</strong> দিয়ে সরাসরি ভোট দিন।</span>
+        </div>
+        <div class="form-group">
+          <label>আপনার ইউনিক আইডি <span class="req">*</span></label>
+          <input type="text" id="uidInput" placeholder="যেমন: VTR-2024-ABCD1234" style="font-family:monospace;letter-spacing:.5px" onkeydown="if(event.key==='Enter')doUidLogin()">
+        </div>
+        <button class="btn btn-primary btn-full mt2" onclick="doUidLogin()">✅ ভোট দিতে প্রবেশ করুন</button>
+
+        <div style="margin-top:1.4rem;padding-top:1.1rem;border-top:1px solid var(--border)">
+          <p style="font-size:.78rem;color:var(--text2);margin-bottom:.65rem;text-align:center">
+            🔍 UID মনে নেই? মোবাইল নম্বর দিয়ে খুঁজুন
+          </p>
+          <div style="display:flex;gap:.5rem">
+            <input type="tel" id="authMobileCheck" placeholder="01XXXXXXXXX"
+              style="flex:1;font-family:monospace"
+              onkeydown="if(event.key==='Enter') lookupUIDFromAuth()">
+            <button class="btn btn-ghost btn-sm" onclick="lookupUIDFromAuth()">খুঁজুন</button>
+          </div>
+          <div id="authUIDResult" style="margin-top:.75rem;display:none"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     DASHBOARD PAGE
+============================================================ -->
+<div class="page" id="page-dashboard">
+  <div class="container">
+
+    <!-- ✉️ Email Service Config Banner (শুধু admin দেখবে) -->
+    <div class="setup-box" id="emailjsBox">
+      <div style="font-size:1.4rem;flex-shrink:0">✉️</div>
+      <div style="flex:1">
+        <h3>ইমেইল সার্ভিস কনফিগ করুন (একবারই করতে হবে)</h3>
+        <p>ভোটারদের অনুমোদন ইমেইল পাঠাতে নিচের যেকোনো একটি সার্ভিস বেছে নিন।</p>
+
+        <!-- Service Selector Tabs -->
+        <div style="display:flex;gap:.35rem;margin:.75rem 0 .6rem;background:var(--bg);border-radius:8px;padding:.2rem;">
+          <button class="btn btn-sm" id="tabEJ"  onclick="switchEmailTab('emailjs')"  style="flex:1;background:var(--accent);color:#fff">EmailJS</button>
+          <button class="btn btn-sm" id="tabBR"  onclick="switchEmailTab('brevo')"   style="flex:1;background:var(--surface2);color:var(--text2)">Brevo</button>
+          <button class="btn btn-sm" id="tabGM"  onclick="switchEmailTab('gmail')"   style="flex:1;background:var(--surface2);color:var(--text2)">Gmail SMTP</button>
+        </div>
+
+        <!-- EmailJS Panel -->
+        <div id="panelEmailjs">
+          <div class="notice notice-blue" style="font-size:.77rem;margin-bottom:.6rem">
+            <span>ℹ️</span><span>EmailJS সরাসরি ব্রাউজার থেকে ইমেইল পাঠায়। Google Sheet ছাড়াও কাজ করে।</span>
+          </div>
+          <div class="config-row mt1">
+            <div><label style="font-size:.75rem">Service ID</label><input type="text" id="ejServiceId" placeholder="service_xxxxxxx"></div>
+            <div><label style="font-size:.75rem">Template ID</label><input type="text" id="ejTemplateId" placeholder="template_xxxxxxx"></div>
+          </div>
+          <div style="margin-bottom:.6rem"><label style="font-size:.75rem">Public Key</label><input type="text" id="ejPublicKey" placeholder="আপনার EmailJS Public Key"></div>
+          <div class="flex-gap">
+            <button class="btn btn-primary btn-sm" onclick="saveEmailjsConfig()">সেভ করুন</button>
+            <button class="btn btn-ghost btn-sm" onclick="testEmailjs()">টেস্ট পাঠান</button>
+          </div>
+        </div>
+
+        <!-- Brevo Panel -->
+        <div id="panelBrevo" class="hidden">
+          <div class="notice notice-blue" style="font-size:.77rem;margin-bottom:.6rem">
+            <span>ℹ️</span><span>Brevo API-র মাধ্যমে Google Apps Script থেকে ইমেইল যাবে। <strong>Google Sheet অবশ্যই কানেক্ট থাকতে হবে।</strong></span>
+          </div>
+          <div style="margin-bottom:.5rem"><label style="font-size:.75rem">Brevo API Key</label><input type="text" id="brevoApiKey" placeholder="xkeysib-xxxxxxxxxxxx"></div>
+          <div class="config-row">
+            <div><label style="font-size:.75rem">Sender Email</label><input type="email" id="brevoSenderEmail" placeholder="noreply@example.com"></div>
+            <div><label style="font-size:.75rem">Sender Name</label><input type="text" id="brevoSenderName" placeholder="ভোটবক্স"></div>
+          </div>
+          <div class="flex-gap mt1">
+            <button class="btn btn-primary btn-sm" onclick="saveBrevoConfig()">সেভ করুন</button>
+            <button class="btn btn-ghost btn-sm" onclick="testBrevo()">টেস্ট পাঠান</button>
+          </div>
+        </div>
+
+        <!-- Gmail SMTP Panel -->
+        <div id="panelGmail" class="hidden">
+          <div class="notice notice-green" style="font-size:.77rem;margin-bottom:.6rem">
+            <span>✅</span><span>GAS-এর <strong>GmailApp</strong> ব্যবহার করে Gmail অ্যাকাউন্ট থেকে ইমেইল যাবে। আলাদা API key লাগে না। <strong>Google Sheet অবশ্যই কানেক্ট থাকতে হবে।</strong></span>
+          </div>
+          <div class="config-row">
+            <div><label style="font-size:.75rem">Sender Name (প্রদর্শিত নাম)</label><input type="text" id="gmailSenderName" placeholder="ভোটবক্স"></div>
+          </div>
+          <div class="flex-gap mt1">
+            <button class="btn btn-primary btn-sm" onclick="saveGmailConfig()">সেভ করুন</button>
+            <button class="btn btn-ghost btn-sm" onclick="testGmail()">টেস্ট পাঠান</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Google Sheets Config -->
+    <div class="setup-box" id="setupBox" style="display:none">
+      <div style="font-size:1.4rem;flex-shrink:0">⚙️</div>
+      <div style="flex:1">
+        <h3>Google Sheets সংযুক্ত করুন</h3>
+        <p>Apps Script Web App URL দিলে সব ডাটা Google Sheets-এ সেভ হবে।</p>
+        <div class="flex-gap mt1">
+          <input type="url" id="sheetInput" placeholder="https://script.google.com/macros/s/..." style="flex:1;min-width:180px">
+          <button class="btn btn-amber btn-sm" onclick="saveSheet()">সেভ</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Header -->
+    <div class="dash-hd">
+      <div>
+        <div class="dash-title" id="greeting">হ্যালো!</div>
+        <div class="dash-sub" id="userIdBadge"></div>
+      </div>
+      <div class="flex-gap">
+        <button class="btn btn-ghost btn-sm" id="copyRegLinkBtn" onclick="copyRegLink()" style="display:none">🔗 রেজিস্ট্রেশন লিংক কপি</button>
+        <button class="btn btn-primary" onclick="openCreate()" id="createVoteBtn" style="display:none">+ নতুন ভোট তৈরি</button>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat"><div class="stat-ico ico-b">🗳️</div><div><div class="stat-val" id="st1">0</div><div class="stat-lbl">মোট ভোট</div></div></div>
+      <div class="stat"><div class="stat-ico ico-g">✅</div><div><div class="stat-val" id="st2">0</div><div class="stat-lbl">সক্রিয়</div></div></div>
+      <div class="stat"><div class="stat-ico ico-p">🙋</div><div><div class="stat-val" id="st3">0</div><div class="stat-lbl">আমার ভোট দেওয়া</div></div></div>
+      <div class="stat"><div class="stat-ico ico-a">👥</div><div><div class="stat-val" id="st4">0</div><div class="stat-lbl">মোট ভোটার</div></div></div>
+    </div>
+
+    <!-- Filter tabs -->
+    <div class="tab-row">
+      <button class="tab-btn active" onclick="filter('all',this)">সব</button>
+      <button class="tab-btn" onclick="filter('active',this)">সক্রিয়</button>
+      <button class="tab-btn" onclick="filter('closed',this)">বন্ধ</button>
+      <button class="tab-btn" onclick="filter('mine',this)" id="tabMine" style="display:none">আমার তৈরি</button>
+      <button class="tab-btn" onclick="filter('voted',this)">ভোট দিয়েছি</button>
+    </div>
+
+    <div class="votes-grid" id="vGrid">
+      <div style="grid-column:1/-1;text-align:center;color:var(--text3);padding:3rem">লোড হচ্ছে…</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     ADMIN PAGE
+============================================================ -->
+<div class="page" id="page-admin">
+  <div class="container">
+    <div class="dash-hd">
+      <div>
+        <div class="dash-title">⚙️ অ্যাডমিন প্যানেল</div>
+        <div class="dash-sub">সব ইউজার, ভোট ও ভোটারের রেকর্ড পরিচালনা করুন</div>
+      </div>
+      <button class="btn btn-ghost" onclick="showPage('dashboard')">← ড্যাশবোর্ড</button>
+    </div>
+    <div class="tab-row">
+      <button class="tab-btn active" onclick="aTab('pending',this)">⏳ ভোটার অনুমোদন</button>
+      <button class="tab-btn" onclick="aTab('creators',this)">✏️ ক্রিয়েটর অনুমোদন</button>
+      <button class="tab-btn" onclick="aTab('users',this)">👥 সকল ইউজার</button>
+      <button class="tab-btn" onclick="aTab('votes',this)">🗳️ সব ভোট</button>
+      <button class="tab-btn" onclick="aTab('records',this)">📋 ভোটার রেকর্ড</button>
+      <button class="tab-btn" onclick="aTab('logs',this)">📜 লগ</button>
+    </div>
+
+    <!-- Pending Registrations -->
+    <div id="aPending">
+      <div class="sec-title">⏳ অনুমোদন অপেক্ষায় আছেন</div>
+      <div class="tbl-wrap">
+        <table class="admin-tbl"><thead><tr>
+          <th>#</th><th>নাম</th><th>ইমেইল</th><th>মোবাইল</th><th>ভোট</th><th>সময়</th><th>অ্যাকশন</th>
+        </tr></thead><tbody id="pendTbody">
+          <tr class="empty-row"><td colspan="7">লোড হচ্ছে…</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <!-- Creators Pending Approval -->
+    <div id="aCreators" class="hidden">
+      <div class="sec-title">✏️ ক্রিয়েটর অ্যাকাউন্ট — অনুমোদন অপেক্ষায়</div>
+      <div class="tbl-wrap">
+        <table class="admin-tbl"><thead><tr>
+          <th>#</th><th>নাম</th><th>ইমেইল</th><th>মোবাইল</th><th>ঠিকানা</th><th>প্রতিষ্ঠান</th><th>সময়</th><th>অ্যাকশন</th>
+        </tr></thead><tbody id="crTbody">
+          <tr class="empty-row"><td colspan="8">লোড হচ্ছে…</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <!-- Approved Users -->
+    <div id="aUsers" class="hidden">
+      <div class="sec-title">👥 সকল ইউজার (অনুমোদিত)</div>
+      <div class="tbl-wrap">
+        <table class="admin-tbl"><thead><tr>
+          <th>#</th><th>নাম</th><th>ইমেইল</th><th>মোবাইল</th><th>ঠিকানা</th><th>ইউনিক আইডি</th>
+          <th>ভূমিকা</th><th>যোগদান</th><th>ভোট</th><th>অ্যাকশন</th>
+        </tr></thead><tbody id="uTbody">
+          <tr class="empty-row"><td colspan="10">লোড হচ্ছে…</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <!-- Votes -->
+    <div id="aVotes" class="hidden">
+      <div class="sec-title">🗳️ সব ভোট</div>
+      <div class="tbl-wrap">
+        <table class="admin-tbl"><thead><tr>
+          <th>#</th><th>শিরোনাম</th><th>তৈরিকারী</th><th>স্ট্যাটাস</th>
+          <th>প্রার্থী</th><th>মোট ভোট</th><th>অ্যাকশন</th>
+        </tr></thead><tbody id="vTbody">
+          <tr class="empty-row"><td colspan="7">লোড হচ্ছে…</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <!-- Records -->
+    <div id="aRecords" class="hidden">
+      <div class="sec-title">📋 ভোটার রেকর্ড</div>
+      <div class="tbl-wrap">
+        <table class="admin-tbl"><thead><tr>
+          <th>#</th><th>ভোটার নাম</th><th>ইউনিক আইডি</th><th>মোবাইল</th>
+          <th>ভোটের শিরোনাম</th><th>পছন্দ</th><th>সময়</th>
+        </tr></thead><tbody id="rTbody">
+          <tr class="empty-row"><td colspan="7">লোড হচ্ছে…</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+
+    <!-- Logs -->
+    <div id="aLogs" class="hidden">
+      <div class="sec-title">📜 অ্যাক্টিভিটি লগ</div>
+      <div class="tbl-wrap">
+        <table class="admin-tbl"><thead><tr>
+          <th>সময়</th><th>ইউজার</th><th>কার্যক্রম</th><th>বিবরণ</th>
+        </tr></thead><tbody id="lTbody">
+          <tr class="empty-row"><td colspan="4">লোড হচ্ছে…</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     CREATE VOTE MODAL
+============================================================ -->
+<div class="moverlay" id="mCreate">
+  <div class="modal">
+    <div class="mhd"><div class="mtitle">🗳️ নতুন ভোট তৈরি করুন</div><div class="mclose" onclick="cm('mCreate')">✕</div></div>
+    <div class="mbody">
+      <div class="form-group">
+        <label>ভোটের শিরোনাম <span class="req">*</span></label>
+        <input type="text" id="vTitle" placeholder="যেমন: সেরা প্রতিনিধি নির্বাচন ২০২৫">
+      </div>
+      <div class="form-group">
+        <label>বিবরণ</label>
+        <textarea id="vDesc" placeholder="ভোটের বিস্তারিত লিখুন…"></textarea>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem">
+        <div class="form-group">
+          <label>ক্যাটাগরি</label>
+          <select id="vCat">
+            <option value="general">সাধারণ</option>
+            <option value="election">নির্বাচন</option>
+            <option value="survey">জরিপ</option>
+            <option value="poll">পোল</option>
+            <option value="decision">সিদ্ধান্ত</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>ভোটিং ধরন</label>
+          <select id="vType">
+            <option value="single">একজন প্রার্থী</option>
+            <option value="multi">একাধিক প্রার্থী</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>প্রার্থীর তালিকা <span class="req">*</span></label>
+        <div class="cand-list" id="candList">
+          <div class="cand-row"><input type="text" placeholder="প্রার্থীর নাম ১" class="ci"><div class="rm-btn" onclick="rmC(this)">✕</div></div>
+          <div class="cand-row"><input type="text" placeholder="প্রার্থীর নাম ২" class="ci"><div class="rm-btn" onclick="rmC(this)">✕</div></div>
+        </div>
+        <button class="btn btn-ghost btn-sm mt1" onclick="addC()">+ প্রার্থী যোগ করুন</button>
+      </div>
+      <div class="form-group">
+        <label>ভোটের শর্ত (ঐচ্ছিক)</label>
+        <textarea id="vCond" placeholder="যেমন: শুধুমাত্র নিবন্ধিত সদস্যরা ভোট দিতে পারবেন…" style="min-height:58px"></textarea>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem">
+        <div class="form-group"><label>শুরুর তারিখ ও সময়</label><input type="datetime-local" id="vStart"></div>
+        <div class="form-group"><label>শেষ তারিখ ও সময়</label><input type="datetime-local" id="vEnd"></div>
+      </div>
+      <div class="form-group">
+        <label>সর্বোচ্চ ভোটার সংখ্যা (ঐচ্ছিক)</label>
+        <input type="number" id="vMax" placeholder="কোনো সীমা না থাকলে খালি রাখুন" min="1">
+      </div>
+      <div class="form-group">
+        <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;font-size:.88rem">
+          <input type="checkbox" id="vPublic" checked style="width:auto;accent-color:var(--accent)">
+          ফলাফল সবার জন্য দৃশ্যমান রাখুন
+        </label>
+      </div>
+
+      <!-- Registration Link Preview -->
+      <div class="notice notice-green" style="margin-top:.5rem;font-size:.79rem">
+        <span>🔗</span>
+        <div>
+          <strong>ভোট তৈরির পর একটি রেজিস্ট্রেশন লিংক পাবেন।</strong><br>
+          সেই লিংক ভোটারদের পাঠান। তারা রেজিস্ট্রেশন করলে আপনি অনুমোদন দিতে পারবেন।
+        </div>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn btn-ghost" onclick="cm('mCreate')">বাতিল</button>
+      <button class="btn btn-primary" onclick="submitVote()">ভোট তৈরি করুন</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     VOTE DETAIL MODAL
+============================================================ -->
+<div class="moverlay" id="mDetail">
+  <div class="modal modal-wide">
+    <div class="mhd"><div class="mtitle" id="dTitle">ভোট বিবরণ</div><div class="mclose" onclick="cm('mDetail')">✕</div></div>
+    <div class="mbody" id="dBody"></div>
+    <div class="mfoot" id="dFoot"></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     VOTE CONFIRM MODAL (identity check before casting)
+============================================================ -->
+<div class="moverlay" id="mVerify">
+  <div class="modal" style="max-width:460px">
+    <div class="mhd"><div class="mtitle">🪪 পরিচয় নিশ্চিতকরণ</div><div class="mclose" onclick="cm('mVerify')">✕</div></div>
+    <div class="mbody">
+      <div class="notice notice-blue" style="font-size:.79rem">
+        <span>🔒</span>
+        <span>আপনার নাম ও ইউনিক আইডি এই ভোটের রেকর্ডে স্থায়ীভাবে সংরক্ষিত হবে।</span>
+      </div>
+      <div class="form-group">
+        <label>পূর্ণ নাম</label>
+        <input type="text" id="vfName" readonly>
+      </div>
+      <div class="form-group">
+        <label>ইউনিক ভোটার আইডি</label>
+        <input type="text" id="vfUid" readonly style="font-family:monospace;letter-spacing:.5px">
+      </div>
+      <div class="notice notice-green" style="font-size:.79rem">
+        <span>✅</span><span>তথ্য আপনার প্রোফাইল থেকে নেওয়া হয়েছে।</span>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn btn-ghost" onclick="cm('mVerify')">বাতিল</button>
+      <button class="btn btn-primary" onclick="goToVoteSelection()">সম্মত আছি — প্রার্থী বেছে নিন →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SCRIPT
+============================================================ -->
+<script>
+// ================================================================
+//  STATE
+// ================================================================
+let CU = null;
+let users    = JSON.parse(localStorage.getItem('vb_u') || '[]');
+let pending  = JSON.parse(localStorage.getItem('vb_p') || '[]'); // pending registrations
+let votes    = JSON.parse(localStorage.getItem('vb_v') || '[]');
+let records  = JSON.parse(localStorage.getItem('vb_r') || '[]');
+let logs     = JSON.parse(localStorage.getItem('vb_l') || '[]');
+let sheetUrl = localStorage.getItem('vb_s') || '';
+let ejConfig = JSON.parse(localStorage.getItem('vb_ej') || 'null');
+// ডিফল্ট EmailJS credentials (hardcoded)
+if (!ejConfig) {
+  ejConfig = {
+    serviceId:  'service_uml5vns',
+    templateId: 'template_s80dxlg',
+    publicKey:  'dwx2IJlUyhh8NbrN8'
+  };
+  localStorage.setItem('vb_ej', JSON.stringify(ejConfig));
+}
+let brevoConfig  = JSON.parse(localStorage.getItem('vb_brevo') || 'null'); // Brevo config
+let gmailConfig  = JSON.parse(localStorage.getItem('vb_gmail') || 'null'); // Gmail config
+let activeEmailService = localStorage.getItem('vb_email_svc') || 'emailjs'; // সক্রিয় সার্ভিস
+let curFilter = 'all';
+let pendingVoteId = null;
+let selCands = [];
+
+// ================================================================
+//  EMAIL SERVICE TABS
+// ================================================================
+function switchEmailTab(svc) {
+  ['emailjs','brevo','gmail'].forEach(function(s) {
+    document.getElementById('panel' + s.charAt(0).toUpperCase() + s.slice(1)).classList.add('hidden');
+    const btn = document.getElementById('tab' + s.substring(0,2).toUpperCase() + s.charAt(2));
+    if (btn) { btn.style.background = 'var(--surface2)'; btn.style.color = 'var(--text2)'; }
+  });
+  const panelId = 'panel' + svc.charAt(0).toUpperCase() + svc.slice(1);
+  document.getElementById(panelId).classList.remove('hidden');
+  const tabMap = { emailjs: 'tabEJ', brevo: 'tabBR', gmail: 'tabGM' };
+  const activeTab = document.getElementById(tabMap[svc]);
+  if (activeTab) { activeTab.style.background = 'var(--accent)'; activeTab.style.color = '#fff'; }
+}
+
+// ================================================================
+//  EMAILJS
+// ================================================================
+function initEmailJS() {
+  emailjs.init('dwx2IJlUyhh8NbrN8');
+}
+
+function saveEmailjsConfig() {
+  const sId = document.getElementById('ejServiceId').value.trim();
+  const tId = document.getElementById('ejTemplateId').value.trim();
+  const pk  = document.getElementById('ejPublicKey').value.trim();
+  if (!sId || !tId || !pk) { toast('সব তথ্য দিন','err'); return; }
+  ejConfig = { serviceId: sId, templateId: tId, publicKey: pk };
+  localStorage.setItem('vb_ej', JSON.stringify(ejConfig));
+  activeEmailService = 'emailjs';
+  localStorage.setItem('vb_email_svc', 'emailjs');
+  emailjs.init(pk);
+  document.getElementById('emailjsBox').style.display = 'none';
+  toast('EmailJS কনফিগ সেভ হয়েছে ✓','ok');
+}
+
+async function testEmailjs() {
+  if (!ejConfig) { toast('আগে EmailJS কনফিগ সেভ করুন','err'); return; }
+  try {
+    await emailjs.send(ejConfig.serviceId, ejConfig.templateId, {
+      to_name: 'টেস্ট ইউজার',
+      to_email: CU.email,
+      voter_name: 'টেস্ট ইউজার',
+      voter_uid: 'VTR-TEST-00001',
+      vote_title: 'টেস্ট ভোট',
+      message: 'এটি একটি টেস্ট ইমেইল।'
+    });
+    toast('টেস্ট ইমেইল পাঠানো হয়েছে ✓','ok');
+  } catch(e) {
+    toast('ইমেইল পাঠানো যায়নি: ' + (e.text || e.message || ''), 'err');
+  }
+}
+
+// ================================================================
+//  BREVO
+// ================================================================
+function saveBrevoConfig() {
+  const apiKey = document.getElementById('brevoApiKey').value.trim();
+  const email  = document.getElementById('brevoSenderEmail').value.trim();
+  const name   = document.getElementById('brevoSenderName').value.trim() || 'ভোটবক্স';
+  if (!apiKey || !email) { toast('API Key ও Sender Email দিন','err'); return; }
+  if (!sheetUrl) { toast('আগে Google Sheet URL সেভ করুন','err'); return; }
+  brevoConfig = { apiKey, senderEmail: email, senderName: name };
+  localStorage.setItem('vb_brevo', JSON.stringify(brevoConfig));
+  activeEmailService = 'brevo';
+  localStorage.setItem('vb_email_svc', 'brevo');
+  document.getElementById('emailjsBox').style.display = 'none';
+  toast('Brevo কনফিগ সেভ হয়েছে ✓','ok');
+}
+
+async function testBrevo() {
+  if (!brevoConfig) { toast('আগে Brevo কনফিগ সেভ করুন','err'); return; }
+  if (!sheetUrl)    { toast('Google Sheet URL সেভ করুন','err'); return; }
+  const sent = await sendViaGAS('brevo', CU.email, CU.name, 'টেস্ট ইমেইল — ভোটবক্স',
+    '<p>এটি একটি <strong>Brevo টেস্ট ইমেইল</strong>। সার্ভিস সঠিকভাবে কাজ করছে ✅</p>');
+  toast(sent ? 'Brevo টেস্ট ইমেইল পাঠানো হয়েছে ✓' : 'Brevo ইমেইল পাঠানো যায়নি ⚠️', sent ? 'ok' : 'err');
+}
+
+// ================================================================
+//  GMAIL SMTP (via GAS GmailApp)
+// ================================================================
+function saveGmailConfig() {
+  const name = document.getElementById('gmailSenderName').value.trim() || 'ভোটবক্স';
+  if (!sheetUrl) { toast('আগে Google Sheet URL সেভ করুন','err'); return; }
+  gmailConfig = { senderName: name };
+  localStorage.setItem('vb_gmail', JSON.stringify(gmailConfig));
+  activeEmailService = 'gmail';
+  localStorage.setItem('vb_email_svc', 'gmail');
+  document.getElementById('emailjsBox').style.display = 'none';
+  toast('Gmail SMTP কনফিগ সেভ হয়েছে ✓','ok');
+}
+
+async function testGmail() {
+  if (!gmailConfig) { toast('আগে Gmail কনফিগ সেভ করুন','err'); return; }
+  if (!sheetUrl)    { toast('Google Sheet URL সেভ করুন','err'); return; }
+  const sent = await sendViaGAS('gmail', CU.email, CU.name, 'টেস্ট ইমেইল — ভোটবক্স',
+    '<p>এটি একটি <strong>Gmail SMTP টেস্ট ইমেইল</strong>। সার্ভিস সঠিকভাবে কাজ করছে ✅</p>');
+  toast(sent ? 'Gmail টেস্ট ইমেইল পাঠানো হয়েছে ✓' : 'Gmail ইমেইল পাঠানো যায়নি ⚠️', sent ? 'ok' : 'err');
+}
+
+// ================================================================
+//  GAS EMAIL SENDER (Brevo ও Gmail উভয়ের জন্য)
+// ================================================================
+async function sendViaGAS(service, toEmail, toName, subject, htmlBody) {
+  if (!sheetUrl) return false;
+  try {
+    const resp = await fetch(sheetUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action:       'sendEmail',
+        emailService: service,
+        to:           toEmail,
+        toName:       toName,
+        subject:      subject,
+        body:         htmlBody
+      })
+    });
+    const result = await resp.json();
+    return result.ok === true;
+  } catch(e) {
+    console.error('GAS sendEmail error:', e);
+    return false;
+  }
+}
+
+// ================================================================
+//  UNIFIED sendApprovalEmail — সক্রিয় সার্ভিস অনুযায়ী পাঠায়
+// ================================================================
+async function sendApprovalEmail(voter, voteTitle) {
+  const subject = `ভোটবক্স — আপনার রেজিস্ট্রেশন অনুমোদিত হয়েছে`;
+  const htmlBody = `
+    <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;background:#0f1729;color:#e2e8f0;border-radius:12px;overflow:hidden;">
+      <div style="background:linear-gradient(135deg,#3b82f6,#6366f1);padding:24px 28px;">
+        <h2 style="margin:0;color:#fff;font-size:1.3rem;">🗳️ ভোটবক্স — রেজিস্ট্রেশন অনুমোদিত</h2>
+      </div>
+      <div style="padding:24px 28px;">
+        <p>প্রিয় <strong>${voter.name}</strong>,</p>
+        <p>আপনার রেজিস্ট্রেশন অনুমোদন হয়েছে। নিচের ইউনিক আইডি দিয়ে ভোট দিতে পারবেন:</p>
+        <div style="background:#162035;border:1px solid #1c2d47;border-radius:8px;padding:16px;text-align:center;margin:16px 0;">
+          <div style="font-size:.8rem;color:#94a3b8;margin-bottom:6px;">আপনার ইউনিক ভোটার আইডি</div>
+          <div style="font-family:monospace;font-size:1.5rem;font-weight:700;color:#10b981;letter-spacing:2px;">${voter.uid}</div>
+        </div>
+        <p style="color:#94a3b8;font-size:.87rem;">ভোটের বিষয়: <strong style="color:#e2e8f0;">${voteTitle}</strong></p>
+        <p style="color:#94a3b8;font-size:.82rem;margin-top:20px;">এই আইডিটি নিরাপদে রাখুন। ভোটবক্স অ্যাপে "ইউনিক আইডি দিয়ে ভোট" অপশনে গিয়ে এই আইডি দিয়ে ভোট দিন।</p>
+      </div>
+      <div style="padding:12px 28px;background:#080c18;color:#3d5470;font-size:.75rem;">এই ইমেইল স্বয়ংক্রিয়ভাবে পাঠানো হয়েছে। উত্তর দেওয়ার প্রয়োজন নেই।</div>
+    </div>`;
+
+  try {
+    if (activeEmailService === 'emailjs' && ejConfig) {
+      await emailjs.send(ejConfig.serviceId, ejConfig.templateId, {
+        to_name:    voter.name,
+        to_email:   voter.email,
+        voter_name: voter.name,
+        voter_uid:  voter.uid,
+        vote_title: voteTitle,
+        message:    `আপনার রেজিস্ট্রেশন অনুমোদন হয়েছে। ইউনিক আইডি: ${voter.uid}`
+      });
+      return true;
+
+    } else if (activeEmailService === 'brevo' && brevoConfig) {
+      return await sendViaGAS('brevo', voter.email, voter.name, subject, htmlBody);
+
+    } else if (activeEmailService === 'gmail' && gmailConfig) {
+      return await sendViaGAS('gmail', voter.email, voter.name, subject, htmlBody);
+
+    } else {
+      // কোনো সার্ভিস কনফিগ নেই — ফলব্যাক চেষ্টা
+      if (ejConfig) {
+        await emailjs.send(ejConfig.serviceId, ejConfig.templateId, {
+          to_name: voter.name, to_email: voter.email,
+          voter_name: voter.name, voter_uid: voter.uid,
+          vote_title: voteTitle, message: `ইউনিক আইডি: ${voter.uid}`
+        });
+        return true;
+      }
+      console.warn('কোনো ইমেইল সার্ভিস কনফিগ করা নেই');
+      return false;
+    }
+  } catch(e) {
+    console.error('sendApprovalEmail error:', e);
+    return false;
+  }
+}
+
+// ================================================================
+//  UID GENERATOR
+// ================================================================
+function genUID() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let r = '';
+  for(let i=0;i<8;i++) r += chars[Math.floor(Math.random()*chars.length)];
+  return 'VTR-' + new Date().getFullYear() + '-' + r;
+}
+
+// ================================================================
+//  FIRST-RUN: কোনো admin না থাকলে setup notice দেখাও
+// ================================================================
+// (demo admin নেই — প্রথম signup করা ইউজারকে এডমিন promote করতে হবে)
+
+// ================================================================
+//  SAVE
+// ================================================================
+function sv()  { localStorage.setItem('vb_u', JSON.stringify(users)); }
+function svp() { localStorage.setItem('vb_p', JSON.stringify(pending)); }
+function svv() { localStorage.setItem('vb_v', JSON.stringify(votes)); }
+function svr() { localStorage.setItem('vb_r', JSON.stringify(records)); }
+function svl() { localStorage.setItem('vb_l', JSON.stringify(logs)); }
+
+function log(action, detail) {
+  logs.unshift({ t: new Date().toISOString(), u: CU?.name || 'System', action, detail });
+  if (logs.length > 300) logs = logs.slice(0, 300);
+  svl();
+}
+
+// ================================================================
+//  SHEET SYNC
+// ================================================================
+function saveSheet() {
+  const v = document.getElementById('sheetInput').value.trim();
+  if (!v) { toast('URL দিন','err'); return; }
+  sheetUrl = v; localStorage.setItem('vb_s', v);
+  document.getElementById('setupBox').style.display = 'none';
+  toast('Google Sheets URL সেভ হয়েছে ✓','ok');
+}
+async function sync(action, data) {
+  if (!sheetUrl) return;
+  try { await fetch(sheetUrl, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ action, ...data }) }); }
+  catch(_) {}
+}
+
+// ================================================================
+//  URL PARAM: ?register=voteId — public registration page
+// ================================================================
+function checkUrlParams() {
+  const params = new URLSearchParams(window.location.search);
+  const regVid = params.get('register');
+  if (regVid) {
+    const v = votes.find(x => x.id === regVid);
+    if (v) {
+      document.getElementById('pubVoteId').value = regVid;
+      document.getElementById('regVoteTitle').textContent = `"${v.title}" ভোটে অংশ নিতে আপনার তথ্য দিন।`;
+    } else {
+      document.getElementById('regLinkInfo').classList.remove('hidden');
+      document.getElementById('regLinkMsg').textContent = 'ভোটের লিংকটি সঠিক নয় বা ভোটটি পাওয়া যায়নি।';
+    }
+    showPage('register');
+  }
+}
+
+// ================================================================
+//  PUBLIC REGISTRATION (ভোটার নিজে করে)
+// ================================================================
+function submitPublicReg() {
+  const name   = document.getElementById('pubName').value.trim();
+  const email  = document.getElementById('pubEmail').value.trim();
+  const mobile = document.getElementById('pubMobile').value.trim();
+  const voteId = document.getElementById('pubVoteId').value;
+
+  if (!name)  { toast('নাম দিন','err'); return; }
+  if (!email || !/\S+@\S+\.\S+/.test(email)) { toast('সঠিক ইমেইল দিন','err'); return; }
+  if (!mobile) { toast('মোবাইল নম্বর দিন','err'); return; }
+  if (!/^01[3-9]\d{8}$/.test(mobile)) { toast('সঠিক মোবাইল নম্বর দিন (11 সংখ্যা)','err'); return; }
+
+  // Duplicate check
+  if (users.find(x=>x.email===email)) { toast('এই ইমেইল দিয়ে আগেই অনুমোদন হয়েছে','err'); return; }
+  if (pending.find(x=>x.email===email)) { toast('আপনার রেজিস্ট্রেশন ইতিমধ্যে অপেক্ষায় আছে','inf'); return; }
+
+  const reg = {
+    id: 'p' + Date.now(),
+    name, email, mobile,
+    voteId: voteId || null,
+    submittedAt: new Date().toISOString(),
+    status: 'pending'
+  };
+  pending.push(reg);
+  svp();
+  sync('savePendingReg', reg);
+
+  // Show success
+  document.getElementById('pubName').value = '';
+  document.getElementById('pubEmail').value = '';
+  document.getElementById('pubMobile').value = '';
+
+  toast('রেজিস্ট্রেশন সফল! এডমিন অনুমোদনের পর আইডি পাবেন ✓','ok');
+
+  // রেজিস্ট্রেশনের পর waiting interface দেখাও
+  document.querySelector('.reg-card').innerHTML = `
+    <div style="text-align:center;padding:1.5rem 0 1rem">
+      <div style="font-size:3rem;margin-bottom:.75rem">⏳</div>
+      <div class="auth-title" style="font-size:1.25rem;margin-bottom:.4rem">অনুমোদনের অপেক্ষায়!</div>
+      <p style="color:var(--text2);font-size:.85rem;line-height:1.65;margin-bottom:1.5rem">
+        আপনার রেজিস্ট্রেশন সফলভাবে জমা হয়েছে।<br>
+        এডমিন অনুমোদনের পর আপনার <strong>ইউনিক আইডি (UID)</strong> তৈরি হবে।
+      </p>
+
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:1.25rem;text-align:left;margin-bottom:1.2rem">
+        <div style="font-size:.78rem;color:var(--text3);margin-bottom:.75rem;text-align:center;letter-spacing:.5px;text-transform:uppercase">আপনার UID চেক করুন</div>
+        <p style="font-size:.8rem;color:var(--text2);margin-bottom:.75rem;text-align:center">অনুমোদন হলে মোবাইল নম্বর দিয়ে আপনার UID দেখুন</p>
+        <div class="form-group" style="margin-bottom:.75rem">
+          <label style="font-size:.78rem">মোবাইল নম্বর</label>
+          <input type="tel" id="mobileCheckInput" placeholder="01XXXXXXXXX"
+            style="font-family:monospace;letter-spacing:.5px"
+            onkeydown="if(event.key==='Enter') checkUIDByMobile()">
+        </div>
+        <button class="btn btn-primary btn-full" onclick="checkUIDByMobile()">🔍 UID দেখুন</button>
+        <div id="uidCheckResult" style="margin-top:.85rem;display:none"></div>
+      </div>
+
+      <p style="font-size:.78rem;color:var(--text3)">
+        ইতিমধ্যে UID আছে?
+        <span style="color:var(--accent);cursor:pointer;font-weight:600"
+              onclick="showPage('auth');authTab('uid')">এখানে ভোট দিন →</span>
+      </p>
+    </div>`;
+}
+}
+
+// ================================================================
+//  MOBILE → UID LOOKUP (রেজিস্ট্রেশনের পর waiting screen থেকে)
+// ================================================================
+function checkUIDByMobile() {
+  const mobile = document.getElementById('mobileCheckInput').value.trim();
+  const box    = document.getElementById('uidCheckResult');
+  if (!mobile) { toast('মোবাইল নম্বর দিন','err'); return; }
+
+  // অনুমোদিত ভোটার খুঁজি
+  const voter = users.find(u => u.mobile === mobile && u.approved && u.role === 'voter');
+
+  if (voter) {
+    box.style.display = 'block';
+    box.innerHTML = `
+      <div style="background:linear-gradient(135deg,#064e3b,#065f46);border:1px solid #10b981;border-radius:10px;padding:1rem;text-align:center">
+        <div style="font-size:1.3rem;margin-bottom:.4rem">✅</div>
+        <div style="font-size:.75rem;color:#6ee7b7;margin-bottom:.3rem">আপনার ইউনিক আইডি</div>
+        <div style="font-family:monospace;font-size:1.35rem;font-weight:700;color:#10b981;letter-spacing:2px;margin-bottom:.6rem">${esc(voter.uid)}</div>
+        <div style="font-size:.78rem;color:#a7f3d0;margin-bottom:.85rem">স্বাগতম, ${esc(voter.name)}! আপনার রেজিস্ট্রেশন অনুমোদিত হয়েছে।</div>
+        <button class="btn btn-primary btn-sm" onclick="quickUIDVote('${voter.uid}')">এই ID দিয়ে ভোট দিন →</button>
+      </div>`;
+  } else {
+    // Pending-এ আছে কিনা দেখি
+    const isPending = pending.find(p => p.mobile === mobile);
+    box.style.display = 'block';
+    if (isPending) {
+      box.innerHTML = `
+        <div style="background:var(--surface2);border:1px solid #f59e0b;border-radius:10px;padding:1rem;text-align:center">
+          <div style="font-size:1.2rem;margin-bottom:.4rem">⏳</div>
+          <div style="font-size:.82rem;color:#fcd34d;font-weight:600;margin-bottom:.3rem">এখনও অনুমোদন হয়নি</div>
+          <div style="font-size:.78rem;color:var(--text2)">আপনার রেজিস্ট্রেশন এডমিনের অনুমোদনের অপেক্ষায় আছে। একটু অপেক্ষা করুন।</div>
+        </div>`;
+    } else {
+      box.innerHTML = `
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1rem;text-align:center">
+          <div style="font-size:1.2rem;margin-bottom:.4rem">❓</div>
+          <div style="font-size:.82rem;color:var(--text2)">এই মোবাইল নম্বরে কোনো রেজিস্ট্রেশন পাওয়া যায়নি।<br>সঠিক নম্বর দিয়ে আবার চেষ্টা করুন।</div>
+        </div>`;
+    }
+  }
+}
+
+function lookupUIDFromAuth() {
+  const mobile = document.getElementById('authMobileCheck').value.trim();
+  const box    = document.getElementById('authUIDResult');
+  if (!mobile) { toast('মোবাইল নম্বর দিন','err'); return; }
+
+  const voter = users.find(u => u.mobile === mobile && u.approved && u.role === 'voter');
+  box.style.display = 'block';
+
+  if (voter) {
+    box.innerHTML = `
+      <div style="background:linear-gradient(135deg,#064e3b,#065f46);border:1px solid #10b981;border-radius:10px;padding:.9rem;text-align:center">
+        <div style="font-size:.73rem;color:#6ee7b7;margin-bottom:.25rem">আপনার UID পাওয়া গেছে</div>
+        <div style="font-family:monospace;font-size:1.2rem;font-weight:700;color:#10b981;letter-spacing:2px;margin-bottom:.5rem">${esc(voter.uid)}</div>
+        <button class="btn btn-primary btn-sm" style="width:100%" onclick="fillAndLogin('${voter.uid}')">এই ID দিয়ে এখনই ভোট দিন →</button>
+      </div>`;
+  } else {
+    const isPending = pending.find(p => p.mobile === mobile);
+    box.innerHTML = isPending
+      ? `<div style="background:var(--surface2);border:1px solid #f59e0b;border-radius:10px;padding:.85rem;text-align:center;font-size:.8rem;color:#fcd34d">
+           ⏳ আপনার রেজিস্ট্রেশন এখনও অনুমোদন হয়নি। একটু অপেক্ষা করুন।
+         </div>`
+      : `<div style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:.85rem;text-align:center;font-size:.8rem;color:var(--text2)">
+           ❓ এই মোবাইল নম্বরে কোনো রেজিস্ট্রেশন পাওয়া যায়নি।
+         </div>`;
+  }
+}
+
+function fillAndLogin(uid) {
+  document.getElementById('uidInput').value = uid;
+  doUidLogin();
+}
+  showPage('auth');
+  authTab('uid');
+  setTimeout(() => {
+    document.getElementById('uidInput').value = uid;
+  }, 100);
+}
+
+// ================================================================
+//  ADMIN: APPROVE REGISTRATION
+// ================================================================
+async function approveReg(pid) {
+  const reg = pending.find(x=>x.id===pid);
+  if (!reg) return;
+
+  const uid = genUID();
+  const u = {
+    id: 'u' + Date.now(),
+    name: reg.name,
+    email: reg.email,
+    mobile: reg.mobile || '',
+    uid,
+    role: 'voter',
+    joined: new Date().toISOString(),
+    totalVotes: 0,
+    approved: true,
+    approvedVoteId: reg.voteId || null
+  };
+  users.push(u); sv();
+
+  // Remove from pending
+  pending = pending.filter(x=>x.id!==pid); svp();
+
+  // Sync to sheet
+  sync('approveVoter', { ...u, voteTitle: reg.voteId ? (votes.find(v=>v.id===reg.voteId)?.title||'') : '' });
+  log('অনুমোদন', `${reg.name} (${reg.email}) অনুমোদিত হয়েছেন। UID: ${uid}`);
+
+  // Send email
+  const voteTitle = reg.voteId ? (votes.find(v=>v.id===reg.voteId)?.title || 'ভোটবক্স') : 'ভোটবক্স';
+  const sent = await sendApprovalEmail(u, voteTitle);
+
+  renderPendTbl();
+  renderUTbl();
+  toast(reg.name + ' অনুমোদিত। ' + (sent ? 'ইমেইল পাঠানো হয়েছে ✓' : 'ইমেইল পাঠানো যায়নি ⚠️'), sent ? 'ok' : 'inf');
+}
+
+function rejectReg(pid) {
+  if (!confirm('এই রেজিস্ট্রেশন বাতিল করবেন?')) return;
+  const reg = pending.find(x=>x.id===pid);
+  pending = pending.filter(x=>x.id!==pid); svp();
+  log('প্রত্যাখ্যান', `${reg?.name} (${reg?.email}) এর রেজিস্ট্রেশন বাতিল করা হয়েছে`);
+  renderPendTbl();
+  toast('বাতিল করা হয়েছে','inf');
+}
+
+// ================================================================
+//  REG LINK
+// ================================================================
+function copyRegLink() {
+  // Find the most recent active vote by this user
+  const myVote = [...votes].reverse().find(v => v.by === CU.id && status(v) === 'active');
+  if (!myVote) { toast('আগে একটি সক্রিয় ভোট তৈরি করুন','err'); return; }
+  const link = window.location.href.split('?')[0] + '?register=' + myVote.id;
+  navigator.clipboard.writeText(link).then(()=>{
+    toast('রেজিস্ট্রেশন লিংক কপি হয়েছে ✓','ok');
+  }).catch(()=>{
+    prompt('এই লিংকটি কপি করুন:', link);
+  });
+}
+
+// ================================================================
+//  AUTH
+// ================================================================
+function authTab(t) {
+  ['login','signup','uid'].forEach(function(k) {
+    const tabMap = { login:'atLogin', signup:'atSignup', uid:'atUid' };
+    const panMap = { login:'loginForm', signup:'signupForm', uid:'uidForm' };
+    document.getElementById(tabMap[k])?.classList.toggle('active', k===t);
+    document.getElementById(panMap[k])?.classList.toggle('hidden', k!==t);
+  });
+}
+
+function doLogin() {
+  const e = document.getElementById('lEmail').value.trim();
+  const p = document.getElementById('lPass').value;
+  if (!e || !p) { toast('ইমেইল ও পাসওয়ার্ড দিন','err'); return; }
+
+  const u = users.find(x => x.email===e && x.password===p && x.role!=='voter');
+  if (!u) { toast('ইমেইল বা পাসওয়ার্ড ভুল','err'); return; }
+  if (!u.approved || u.role === 'creator_pending') { toast('আপনার অ্যাকাউন্ট এখনও অনুমোদিত হয়নি। এডমিনের সাথে যোগাযোগ করুন।','err'); return; }
+  CU = u;
+  log('লগইন', `${u.name} লগইন করেছেন`);
+  navUpdate(); showPage('dashboard'); dash();
+}
+
+function doSignup() {
+  const name    = document.getElementById('suName').value.trim();
+  const email   = document.getElementById('suEmail').value.trim();
+  const mobile  = document.getElementById('suMobile').value.trim();
+  const address = document.getElementById('suAddress').value.trim();
+  const org     = document.getElementById('suOrg').value.trim();
+  const pass    = document.getElementById('suPass').value;
+  const pass2   = document.getElementById('suPass2').value;
+
+  if (!name)   { toast('পূর্ণ নাম দিন','err'); return; }
+  if (!email || !/\S+@\S+\.\S+/.test(email)) { toast('সঠিক ইমেইল দিন','err'); return; }
+  if (!mobile) { toast('মোবাইল নম্বর দিন','err'); return; }
+  if (!pass || pass.length < 6) { toast('পাসওয়ার্ড কমপক্ষে ৬ অক্ষর হতে হবে','err'); return; }
+  if (pass !== pass2) { toast('পাসওয়ার্ড মিলছে না','err'); return; }
+  if (users.find(x => x.email === email)) { toast('এই ইমেইল দিয়ে আগেই অ্যাকাউন্ট আছে','err'); return; }
+
+  const isFirstUser = users.length === 0;
+  const newUser = {
+    id:       'u' + Date.now(),
+    name, email, mobile, address, org,
+    password: pass,
+    uid:      isFirstUser ? 'ADMIN-001' : genUID(),
+    role:     isFirstUser ? 'admin' : 'creator_pending', // প্রথম জন সরাসরি admin
+    approved: isFirstUser,
+    joined:   new Date().toISOString(),
+    totalVotes: 0
+  };
+  users.push(newUser); sv();
+
+  // Sheet-এ sync করো
+  sync('saveCreator', {
+    id: newUser.id, name, email, mobile, address, org,
+    role: newUser.role, approved: newUser.approved,
+    joined: newUser.joined
+  });
+
+  if (isFirstUser) {
+    log('প্রথম এডমিন', `${name} প্রথম ইউজার হিসেবে এডমিন হয়েছেন`);
+    toast('স্বাগতম! আপনি প্রথম ইউজার — সরাসরি এডমিন হিসেবে অ্যাকাউন্ট তৈরি হয়েছে ✓','ok');
+    CU = newUser; navUpdate(); showPage('dashboard'); dash();
+  } else {
+    log('নতুন অ্যাকাউন্ট', `${name} (${email}) ক্রিয়েটর অ্যাকাউন্টের জন্য আবেদন করেছেন`);
+    toast('অ্যাকাউন্ট তৈরির আবেদন পাঠানো হয়েছে। এডমিন অনুমোদনের পর লগইন করতে পারবেন ✓','ok');
+    // ফর্ম রিসেট
+    ['suName','suEmail','suMobile','suAddress','suOrg','suPass','suPass2'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    authTab('login');
+  }
+}
+
+function doUidLogin() {
+  const uid = document.getElementById('uidInput').value.trim().toUpperCase();
+  if (!uid) { toast('ইউনিক আইডি দিন','err'); return; }
+  const u = users.find(x => x.uid === uid && x.approved);
+  if (!u) { toast('এই আইডি পাওয়া যায়নি বা অনুমোদিত নয়','err'); return; }
+  CU = u;
+  log('UID লগইন', `${u.name} UID দিয়ে প্রবেশ করেছেন`);
+  navUpdate(); showPage('dashboard'); dash();
+}
+
+function doLogout() {
+  log('লগআউট', `${CU?.name} লগআউট করেছেন`);
+  CU = null; navUpdate(); showPage('auth');
+}
+
+function navUpdate() {
+  const r = document.getElementById('navR');
+  if (!CU) {
+    r.innerHTML = `<button class="btn btn-ghost btn-sm" onclick="showPage('auth')">লগইন</button>`;
+    return;
+  }
+  r.innerHTML = `
+    ${(CU.role==='admin') ? `<button class="btn btn-ghost btn-sm" onclick="showPage('admin');loadAdmin()">⚙️ অ্যাডমিন</button>` : ''}
+    <div class="pill ${CU.role==='admin'?'pill-admin':'pill-user'}">
+      <div class="avatar">${CU.name[0].toUpperCase()}</div>
+      ${esc(CU.name)}
+      ${CU.role==='admin' ? '<span style="font-size:.68rem;opacity:.8">ADMIN</span>' : CU.role==='creator'?'<span style="font-size:.68rem;opacity:.8">ক্রিয়েটর</span>':''}
+    </div>
+    <button class="btn btn-red btn-sm" onclick="doLogout()">লগআউট</button>`;
+}
+
+// ================================================================
+//  NAVIGATION
+// ================================================================
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+}
+
+// ================================================================
+//  DASHBOARD
+// ================================================================
+function dash() {
+  const myVoted = new Set(records.filter(r=>r.uid===CU.id).map(r=>r.vid));
+  document.getElementById('greeting').textContent = `হ্যালো, ${CU.name}! 👋`;
+
+  if (CU.role === 'voter') {
+    document.getElementById('userIdBadge').innerHTML =
+      `<span class="pill pill-verified">✓ আইডি: ${CU.uid}</span>`;
+    document.getElementById('createVoteBtn').style.display = 'none';
+    document.getElementById('copyRegLinkBtn').style.display = 'none';
+    document.getElementById('tabMine').style.display = 'none';
+  } else {
+    const roleText = CU.role==='admin' ? 'Super Admin' : 'ক্রিয়েটর';
+    document.getElementById('userIdBadge').innerHTML =
+      `<span class="pill pill-admin">⚡ ${roleText}</span>`;
+    document.getElementById('createVoteBtn').style.display = '';
+    document.getElementById('copyRegLinkBtn').style.display = '';
+    document.getElementById('tabMine').style.display = '';
+  }
+
+  document.getElementById('st1').textContent = votes.length;
+  document.getElementById('st2').textContent = votes.filter(v=>status(v)==='active').length;
+  document.getElementById('st3').textContent = myVoted.size;
+  document.getElementById('st4').textContent = users.filter(u=>u.role==='voter'||u.role==='admin').length;
+
+  // Email banner: কোনো সার্ভিস কনফিগ থাকলে বা ভোটার হলে লুকাও
+  const anyEmailCfg = ejConfig || brevoConfig || gmailConfig;
+  if (anyEmailCfg || CU.role === 'voter') {
+    document.getElementById('emailjsBox').style.display = 'none';
+  } else {
+    document.getElementById('emailjsBox').style.display = '';
+    switchEmailTab(activeEmailService); // সঠিক ট্যাব দেখাও
+  }
+  if (sheetUrl) document.getElementById('setupBox').style.display = 'none';
+
+  renderVotes(curFilter);
+}
+
+function filter(f, btn) {
+  curFilter = f;
+  document.querySelectorAll('.tab-row .tab-btn').forEach(b=>b.classList.remove('active'));
+  btn?.classList.add('active');
+  renderVotes(f);
+}
+
+function renderVotes(f) {
+  const grid = document.getElementById('vGrid');
+  const myVoted = new Set(records.filter(r=>r.uid===CU.id).map(r=>r.vid));
+  let list = [...votes].reverse();
+  if (f==='active')  list = list.filter(v=>status(v)==='active');
+  else if (f==='closed') list = list.filter(v=>status(v)==='closed');
+  else if (f==='mine')   list = list.filter(v=>v.by===CU.id);
+  else if (f==='voted')  list = list.filter(v=>myVoted.has(v.id));
+  if (!list.length) { grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;color:var(--text3);padding:3rem">কোনো ভোট পাওয়া যায়নি</div>`; return; }
+  grid.innerHTML = list.map(v=>vcard(v,myVoted)).join('');
+}
+
+function vcard(v, myVoted) {
+  const st = status(v);
+  const tot = totCount(v.id);
+  const cr  = users.find(u=>u.id===v.by);
+  const hv  = myVoted.has(v.id);
+  const pct = v.max ? Math.min(100,Math.round(tot/v.max*100)) : 0;
+  const sLbl = {active:'🟢 সক্রিয়',closed:'🔴 বন্ধ',pending:'🟡 অপেক্ষমান'};
+  return `<div class="vcard" onclick="openDetail('${v.id}')">
+    <div class="vcard-hd">
+      <div class="vcard-title">${esc(v.title)}</div>
+      <span class="vstatus vs-${st}">${sLbl[st]}</span>
+    </div>
+    <div class="vmeta">
+      <span>📂 ${catLabel(v.cat)}</span>
+      <span>👤 ${esc(cr?.name||'অজানা')}</span>
+      ${v.end?`<span>⏰ ${fmtDate(v.end)}</span>`:''}
+    </div>
+    ${v.desc?`<div class="vdesc">${esc(v.desc.slice(0,90))}${v.desc.length>90?'…':''}</div>`:''}
+    <div class="vcands">
+      ${v.cands.slice(0,3).map(c=>`<span class="cand-pill">👤 ${esc(c)}</span>`).join('')}
+      ${v.cands.length>3?`<span class="cand-pill">+${v.cands.length-3} জন</span>`:''}
+    </div>
+    ${v.max?`<div class="prog-wrap"><div class="prog-bar" style="width:${pct}%"></div></div>`:''}
+    <div class="vfoot">
+      <div class="vcount">🗳️ ${tot} ভোট${v.max?` / ${v.max}`:''}</div>
+      ${hv?'<span class="chip chip-green">✅ ভোট দিয়েছেন</span>':(st==='active'?'<span class="chip chip-blue">ভোট দিন →</span>':'')}
+    </div>
+  </div>`;
+}
+
+// ================================================================
+//  VOTE DETAIL
+// ================================================================
+function openDetail(id) {
+  const v   = votes.find(x=>x.id===id);
+  if (!v) return;
+  const st  = status(v);
+  const myR = records.find(r=>r.vid===id && r.uid===CU.id);
+  const hv  = !!myR;
+  const all = records.filter(r=>r.vid===id);
+  const tot = all.length;
+  const cr  = users.find(u=>u.id===v.by);
+  const showR = v.pub || hv || v.by===CU.id || CU.role==='admin';
+  const canSeeVoterList = v.by===CU.id || CU.role==='admin';
+
+  const tally = {}; v.cands.forEach(c=>tally[c]=0);
+  all.forEach(r=>r.chosen.forEach(c=>{ if(tally[c]!==undefined) tally[c]++; }));
+  const mx = Math.max(...Object.values(tally),1);
+
+  let html = `
+    <div class="vd-title">${esc(v.title)}</div>
+    <div class="vmeta" style="margin-bottom:.65rem">
+      <span>📂 ${catLabel(v.cat)}</span>
+      <span>👤 ${esc(cr?.name||'অজানা')}</span>
+      ${v.start?`<span>▶ ${fmtDate(v.start)}</span>`:''}
+      ${v.end?`<span>⏹ ${fmtDate(v.end)}</span>`:''}
+      <span>🗳️ ${tot} ভোট</span>
+      ${v.max?`<span>👥 সর্বোচ্চ ${v.max}</span>`:''}
+    </div>
+    ${v.desc?`<p style="color:var(--text2);font-size:.87rem;line-height:1.6;margin-bottom:.9rem">${esc(v.desc)}</p>`:''}
+    ${v.cond?`<div class="notice notice-warn"><span>📋</span><span><strong>শর্ত:</strong> ${esc(v.cond)}</span></div>`:''}
+  `;
+
+  // Registration link (admin/creator দেখবে)
+  if (canSeeVoterList && st === 'active') {
+    const regLink = window.location.href.split('?')[0] + '?register=' + v.id;
+    html += `<div class="notice notice-blue" style="font-size:.79rem">
+      <span>🔗</span>
+      <div>
+        <strong>ভোটার রেজিস্ট্রেশন লিংক:</strong><br>
+        <div class="link-box" style="margin-top:.35rem">
+          <span style="flex:1;overflow:hidden;text-overflow:ellipsis">${regLink}</span>
+          <button class="btn btn-ghost btn-sm" onclick="navigator.clipboard.writeText('${regLink}').then(()=>toast('কপি হয়েছে','ok'))">কপি</button>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  if (st==='active' && !hv) {
+    html += `<div class="sec-title" style="margin-top:1rem">প্রার্থী বেছে নিন ${v.type==='multi'?'<span style="font-size:.78rem;color:var(--text2)">(একাধিক বাছাই সম্ভব)</span>':''}</div>
+      <div class="cand-vote-list" id="cvl">
+        ${v.cands.map(c=>`
+          <div class="cvi" onclick="selC(this,'${esc(c)}','${v.type}')" data-c="${esc(c)}">
+            <div class="cn-row">
+              <span class="cn-name">👤 ${esc(c)}</span>
+              ${showR?`<span class="cn-pct">${tally[c]} ভোট</span>`:''}
+            </div>
+            ${showR?`<div class="cn-bar-wrap"><div class="cn-bar" style="width:${Math.round(tally[c]/mx*100)}%"></div></div>`:''}
+          </div>`).join('')}
+      </div>`;
+  } else {
+    html += `<div class="sec-title" style="margin-top:1rem">ফলাফল ${hv?'<span style="color:var(--green);font-size:.78rem">✓ আপনি ভোট দিয়েছেন</span>':''}</div>
+      <div class="cand-vote-list">
+        ${[...v.cands].sort((a,b)=>tally[b]-tally[a]).map((c,i)=>{
+          const isTop = i===0 && tally[c]>0;
+          const pct = tot>0?Math.round(tally[c]/tot*100):0;
+          const isMyV = myR?.chosen?.includes(c);
+          return `<div class="cvi no-pointer ${isMyV?'my-vote':''}">
+            <div class="cn-row">
+              <span class="cn-name">${isTop?'🏆 ':''} ${esc(c)} ${isMyV?'<span style="color:var(--green);font-size:.72rem;margin-left:.4rem">← আপনার ভোট</span>':''}</span>
+              ${showR?`<span class="cn-pct">${tally[c]} ভোট (${pct}%)</span>`:``}
+            </div>
+            ${showR?`<div class="cn-bar-wrap"><div class="cn-bar ${isTop?'top':''}" style="width:${pct}%"></div></div>`:''}
+          </div>`;
+        }).join('')}
+      </div>`;
+    if (canSeeVoterList && all.length) {
+      html += `<div class="voter-section">
+        <div class="voter-section-title">🗂️ ভোটারের তালিকা (${all.length} জন) <span style="font-size:.7rem;color:var(--amber)">— শুধু অ্যাডমিন ও ভোট তৈরিকারী দেখতে পাচ্ছেন</span></div>
+        <div class="voter-table-wrap">
+          <table class="vtbl"><thead><tr>
+            <th>#</th><th>নাম</th><th>ইউনিক আইডি</th><th>মোবাইল</th><th>পছন্দ</th><th>সময়</th>
+          </tr></thead><tbody>
+            ${all.map((r,i)=>{
+              const vu = users.find(u=>u.id===r.uid);
+              return `<tr>
+                <td>${i+1}</td>
+                <td>${esc(vu?.name||r.name||'—')}</td>
+                <td><span class="uid-chip">${esc(vu?.uid||r.uid||'—')}</span></td>
+                <td>${esc(vu?.mobile||r.mobile||'—')}</td>
+                <td>${r.chosen.map(c=>`<span class="chip">${esc(c)}</span>`).join(' ')}</td>
+                <td style="font-size:.75rem;color:var(--text2)">${fmtDT(r.t)}</td>
+              </tr>`;
+            }).join('')}
+          </tbody></table>
+        </div>
+      </div>`;
+    } else if (!canSeeVoterList && tot > 0) {
+      html += `<div class="voter-section">
+        <div class="notice notice-blue" style="font-size:.78rem">
+          <span>🔐</span>
+          <span>কে কাকে ভোট দিয়েছেন সেই তথ্য শুধুমাত্র অ্যাডমিন ও ভোট তৈরিকারী দেখতে পারবেন।</span>
+        </div>
+      </div>`;
+    }
+  }
+
+  document.getElementById('dBody').innerHTML = html;
+  document.getElementById('dTitle').textContent = '🗳️ ' + v.title;
+
+  let foot = '';
+  if (st==='active' && !hv) {
+    foot = `<button class="btn btn-ghost" onclick="cm('mDetail')">বাতিল</button>
+            <button class="btn btn-primary" id="castBtn" onclick="initVerify('${id}')">🪪 পরিচয় যাচাই করে ভোট দিন</button>`;
+  } else {
+    foot = `<button class="btn btn-ghost" onclick="cm('mDetail')">বন্ধ করুন</button>`;
+    if (v.by===CU.id || CU.role==='admin') {
+      if (st==='active') foot += `<button class="btn btn-amber btn-sm" onclick="closeVote('${id}')">⏹ ভোট বন্ধ করুন</button>`;
+      foot += `<button class="btn btn-red btn-sm" onclick="delVote('${id}')">🗑️ মুছুন</button>`;
+    }
+  }
+  document.getElementById('dFoot').innerHTML = foot;
+  document.getElementById('mDetail').classList.add('open');
+}
+
+// ================================================================
+//  IDENTITY VERIFY → CAST VOTE
+// ================================================================
+function initVerify(vid) {
+  pendingVoteId = vid;
+  selCands = [];
+  document.getElementById('vfName').value = CU.name;
+  document.getElementById('vfUid').value  = CU.uid || 'N/A';
+  cm('mDetail');
+  document.getElementById('mVerify').classList.add('open');
+}
+
+window.goToVoteSelection = function() {
+  const v = votes.find(x=>x.id===pendingVoteId);
+  if (!v) return;
+  cm('mVerify');
+  openDetail(pendingVoteId);
+  document.getElementById('dFoot').innerHTML =
+    `<button class="btn btn-ghost" onclick="cm('mDetail')">বাতিল</button>
+     <button class="btn btn-primary" onclick="castVote()">✅ ভোট নিশ্চিত করুন</button>`;
+};
+
+function selC(el, cname, type) {
+  if (type==='single') {
+    document.querySelectorAll('#cvl .cvi').forEach(x=>x.classList.remove('selected'));
+    el.classList.add('selected');
+    selCands = [cname];
+  } else {
+    el.classList.toggle('selected');
+    if (el.classList.contains('selected')) { if(!selCands.includes(cname)) selCands.push(cname); }
+    else selCands = selCands.filter(c=>c!==cname);
+  }
+}
+
+function castVote() {
+  if (!selCands.length) { toast('কমপক্ষে একজন প্রার্থী বেছে নিন','err'); return; }
+  const v = votes.find(x=>x.id===pendingVoteId);
+  if (!v) return;
+  if (records.find(r=>r.vid===pendingVoteId && r.uid===CU.id)) { toast('আপনি আগেই এই ভোটে অংশ নিয়েছেন','err'); return; }
+
+  const rec = {
+    vid: pendingVoteId, uid: CU.id,
+    name: CU.name, uid_code: CU.uid, mobile: CU.mobile||'',
+    chosen: selCands, t: new Date().toISOString()
+  };
+  records.push(rec); svr();
+  sync('castVote', { name: CU.name, uid: CU.uid, mobile: CU.mobile||'', voteTitle: v.title, chosen: selCands, time: rec.t });
+
+  const u = users.find(x=>x.id===CU.id);
+  if (u) { u.totalVotes=(u.totalVotes||0)+1; sv(); CU.totalVotes=(CU.totalVotes||0)+1; }
+  log('ভোট প্রদান', `${CU.name} (${CU.uid}) "${v.title}" ভোটে "${selCands.join(', ')}" বেছেছেন`);
+
+  selCands=[]; pendingVoteId=null;
+  cm('mDetail');
+  toast('ভোট সফলভাবে গ্রহণ হয়েছে ✅','ok');
+  dash();
+  setTimeout(()=>openDetail(v.id), 350);
+}
+
+function closeVote(id) {
+  const v=votes.find(x=>x.id===id);
+  if(v){v.status='closed';svv();log('ভোট বন্ধ',`"${v.title}" বন্ধ করা হয়েছে`);}
+  cm('mDetail'); dash(); toast('ভোট বন্ধ করা হয়েছে','inf');
+}
+function delVote(id) {
+  if(!confirm('এই ভোটটি মুছে ফেলবেন?')) return;
+  const v=votes.find(x=>x.id===id);
+  votes=votes.filter(x=>x.id!==id); svv();
+  log('ভোট মুছে ফেলা',`"${v?.title}" মুছে ফেলা হয়েছে`);
+  cm('mDetail'); dash(); toast('মুছে ফেলা হয়েছে','inf');
+}
+
+// ================================================================
+//  CREATE VOTE
+// ================================================================
+function openCreate() {
+  ['vTitle','vDesc','vCond','vStart','vEnd','vMax'].forEach(i=>document.getElementById(i).value='');
+  document.getElementById('vPublic').checked=true;
+  document.getElementById('candList').innerHTML=`
+    <div class="cand-row"><input type="text" placeholder="প্রার্থীর নাম ১" class="ci"><div class="rm-btn" onclick="rmC(this)">✕</div></div>
+    <div class="cand-row"><input type="text" placeholder="প্রার্থীর নাম ২" class="ci"><div class="rm-btn" onclick="rmC(this)">✕</div></div>`;
+  document.getElementById('mCreate').classList.add('open');
+}
+function addC() {
+  const l=document.getElementById('candList');
+  const r=document.createElement('div'); r.className='cand-row';
+  r.innerHTML=`<input type="text" placeholder="প্রার্থীর নাম ${l.children.length+1}" class="ci"><div class="rm-btn" onclick="rmC(this)">✕</div>`;
+  l.appendChild(r); r.querySelector('input').focus();
+}
+function rmC(btn) {
+  const l=document.getElementById('candList');
+  if(l.children.length<=1){toast('কমপক্ষে একজন প্রার্থী রাখুন','err');return;}
+  btn.parentElement.remove();
+}
+function submitVote() {
+  const title = document.getElementById('vTitle').value.trim();
+  if(!title){toast('শিরোনাম দিন','err');return;}
+  const cands = [...document.querySelectorAll('#candList .ci')].map(i=>i.value.trim()).filter(Boolean);
+  if(cands.length<2){toast('কমপক্ষে ২ জন প্রার্থী লাগবে','err');return;}
+  const v={
+    id:'v'+Date.now(), title,
+    desc:  document.getElementById('vDesc').value.trim(),
+    cat:   document.getElementById('vCat').value,
+    cands,
+    cond:  document.getElementById('vCond').value.trim(),
+    start: document.getElementById('vStart').value||null,
+    end:   document.getElementById('vEnd').value||null,
+    max:   parseInt(document.getElementById('vMax').value)||null,
+    type:  document.getElementById('vType').value,
+    pub:   document.getElementById('vPublic').checked,
+    by:    CU.id, at: new Date().toISOString(), status:'active'
+  };
+  votes.push(v); svv();
+  sync('saveVote',{...v, candidates:v.cands, cat:v.cat, cond:v.cond, max:v.max, pub:v.pub});
+  log('ভোট তৈরি',`"${title}" নামে ভোট তৈরি হয়েছে`);
+  cm('mCreate'); dash(); toast('ভোট তৈরি হয়েছে ✓ — এখন রেজিস্ট্রেশন লিংক শেয়ার করুন','ok');
+  // Auto copy reg link
+  setTimeout(()=>{
+    const regLink = window.location.href.split('?')[0] + '?register=' + v.id;
+    navigator.clipboard.writeText(regLink).catch(()=>{});
+  }, 500);
+}
+
+// ================================================================
+//  ADMIN
+// ================================================================
+function loadAdmin() { aTab('pending', document.querySelector('#page-admin .tab-btn')); }
+
+function aTab(t, btn) {
+  document.querySelectorAll('#page-admin .tab-btn').forEach(b=>b.classList.remove('active'));
+  btn?.classList.add('active');
+  ['aPending','aCreators','aUsers','aVotes','aRecords','aLogs'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+  const map = {pending:'aPending',creators:'aCreators',users:'aUsers',votes:'aVotes',records:'aRecords',logs:'aLogs'};
+  document.getElementById(map[t]).classList.remove('hidden');
+  if (t==='pending') renderPendTbl();
+  else if(t==='creators') renderCreatorsTbl();
+  else if(t==='users') renderUTbl();
+  else if(t==='votes') renderVTbl();
+  else if(t==='records') renderRTbl();
+  else renderLTbl();
+}
+
+function renderPendTbl() {
+  const tb=document.getElementById('pendTbody');
+  if(!pending.length){tb.innerHTML='<tr class="empty-row"><td colspan="7">অপেক্ষায় কেউ নেই</td></tr>';return;}
+  tb.innerHTML=[...pending].reverse().map((p,i)=>{
+    const v = votes.find(x=>x.id===p.voteId);
+    return `<tr>
+      <td>${i+1}</td>
+      <td><strong>${esc(p.name)}</strong></td>
+      <td>${esc(p.email)}</td>
+      <td>${esc(p.mobile||'—')}</td>
+      <td>${v?`<span class="chip chip-blue">${esc(v.title)}</span>`:'সব'}</td>
+      <td style="font-size:.77rem">${fmtDT(p.submittedAt)}</td>
+      <td style="display:flex;gap:.35rem;flex-wrap:wrap">
+        <button class="btn btn-sm btn-green" onclick="approveReg('${p.id}')">✅ অনুমোদন</button>
+        <button class="btn btn-sm btn-red" onclick="rejectReg('${p.id}')">❌ বাতিল</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ক্রিয়েটর অনুমোদন টেবিল
+function renderCreatorsTbl() {
+  const tb = document.getElementById('crTbody');
+  const pending_creators = users.filter(u => u.role === 'creator_pending');
+  if (!pending_creators.length) {
+    tb.innerHTML = '<tr class="empty-row"><td colspan="8">অনুমোদনের অপেক্ষায় কোনো ক্রিয়েটর নেই</td></tr>';
+    return;
+  }
+  tb.innerHTML = [...pending_creators].reverse().map((u,i) => `<tr>
+    <td>${i+1}</td>
+    <td><strong>${esc(u.name)}</strong></td>
+    <td>${esc(u.email)}</td>
+    <td>${esc(u.mobile||'—')}</td>
+    <td>${esc(u.address||'—')}</td>
+    <td>${esc(u.org||'—')}</td>
+    <td style="font-size:.77rem">${fmtDT(u.joined)}</td>
+    <td style="display:flex;gap:.35rem;flex-wrap:wrap">
+      <button class="btn btn-sm btn-green" onclick="approveCreator('${u.id}')">✅ অনুমোদন</button>
+      <button class="btn btn-sm btn-red"   onclick="rejectCreator('${u.id}')">❌ বাতিল</button>
+    </td>
+  </tr>`).join('');
+}
+
+function approveCreator(uid) {
+  const u = users.find(x => x.id === uid);
+  if (!u) return;
+  u.role = 'creator';
+  u.approved = true;
+  sv();
+  sync('approveCreator', { id: u.id, email: u.email, name: u.name, approvedAt: new Date().toISOString() });
+  log('ক্রিয়েটর অনুমোদন', `${u.name} (${u.email}) ক্রিয়েটর হিসেবে অনুমোদিত`);
+  renderCreatorsTbl(); renderUTbl();
+  toast(u.name + ' অনুমোদিত হয়েছেন ✓', 'ok');
+}
+
+function rejectCreator(uid) {
+  if (!confirm('এই অ্যাকাউন্ট আবেদন বাতিল করবেন?')) return;
+  const u = users.find(x => x.id === uid);
+  users = users.filter(x => x.id !== uid); sv();
+  log('ক্রিয়েটর বাতিল', `${u?.name} (${u?.email}) এর আবেদন বাতিল করা হয়েছে`);
+  renderCreatorsTbl();
+  toast('আবেদন বাতিল করা হয়েছে', 'inf');
+}
+
+function renderUTbl() {
+  const tb = document.getElementById('uTbody');
+  const approved = users.filter(u => u.approved && u.role !== 'creator_pending');
+  if (!approved.length) {
+    tb.innerHTML = '<tr class="empty-row"><td colspan="10">কোনো ইউজার নেই</td></tr>';
+    return;
+  }
+  const roleLabel = { admin:'<span class="pill pill-admin" style="font-size:.7rem">ADMIN</span>',
+                      creator:'<span class="chip chip-blue">ক্রিয়েটর</span>',
+                      voter:'<span class="chip">ভোটার</span>' };
+  tb.innerHTML = approved.map((u,i) => `<tr>
+    <td>${i+1}</td>
+    <td><div style="display:flex;align-items:center;gap:.5rem">
+      <div class="avatar" style="width:26px;height:26px;font-size:.7rem">${u.name[0].toUpperCase()}</div>
+      ${esc(u.name)}</div></td>
+    <td>${esc(u.email)}</td>
+    <td>${esc(u.mobile||'—')}</td>
+    <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis">${esc(u.address||'—')}</td>
+    <td><span class="uid-chip">${esc(u.uid||'—')}</span></td>
+    <td>${roleLabel[u.role]||'<span class="chip">অজানা</span>'}</td>
+    <td style="font-size:.78rem">${fmtDate(u.joined)}</td>
+    <td>${u.totalVotes||0}</td>
+    <td style="display:flex;gap:.35rem;flex-wrap:wrap">
+      ${u.role!=='admin'?`<button class="btn btn-sm btn-ghost" onclick="mkAdmin('${u.id}')">↑ এডমিন</button>`:''}
+      ${u.role==='voter'?`<button class="btn btn-sm btn-ghost" onclick="mkCreator('${u.id}')">↑ ক্রিয়েটর</button>`:''}
+      ${u.id!==CU.id?`<button class="btn btn-sm btn-red" onclick="rmUser('${u.id}')">মুছুন</button>`:'<span class="chip">আপনি</span>'}
+    </td>
+  </tr>`).join('');
+}
+
+function mkAdmin(uid) {
+  const u = users.find(x=>x.id===uid);
+  if(u){ u.role='admin'; u.approved=true; sv(); log('ভূমিকা পরিবর্তন',`${u.name} এডমিন হয়েছেন`); renderUTbl(); toast(u.name+' এডমিন হয়েছেন','ok'); }
+}
+function mkCreator(uid) {
+  const u = users.find(x=>x.id===uid);
+  if(u){ u.role='creator'; u.approved=true; sv(); log('ভূমিকা পরিবর্তন',`${u.name} ক্রিয়েটর হয়েছেন`); renderUTbl(); toast(u.name+' ক্রিয়েটর হয়েছেন','ok'); }
+}
+function rmUser(uid) {
+  if(!confirm('এই ইউজার মুছে ফেলবেন?')) return;
+  const u=users.find(x=>x.id===uid);
+  users=users.filter(x=>x.id!==uid); sv();
+  log('ইউজার মুছে ফেলা',`${u?.name} মুছে ফেলা হয়েছে`);
+  renderUTbl(); toast('মুছে ফেলা হয়েছে','inf');
+}
+
+function renderVTbl() {
+  const tb=document.getElementById('vTbody');
+  if(!votes.length){tb.innerHTML='<tr class="empty-row"><td colspan="7">কোনো ভোট নেই</td></tr>';return;}
+  const sL={active:'<span class="vstatus vs-active">সক্রিয়</span>',closed:'<span class="vstatus vs-closed">বন্ধ</span>',pending:'<span class="vstatus vs-pending">অপেক্ষমান</span>'};
+  tb.innerHTML=[...votes].reverse().map((v,i)=>{
+    const cr=users.find(u=>u.id===v.by);
+    return `<tr>
+      <td>${i+1}</td><td>${esc(v.title)}</td><td>${esc(cr?.name||'অজানা')}</td>
+      <td>${sL[status(v)]}</td><td>${v.cands.length} জন</td><td>${totCount(v.id)}</td>
+      <td style="display:flex;gap:.35rem">
+        <button class="btn btn-sm btn-ghost" onclick="showPage('dashboard');dash();setTimeout(()=>openDetail('${v.id}'),100)">দেখুন</button>
+        <button class="btn btn-sm btn-red" onclick="if(confirm('মুছবেন?')){votes=votes.filter(x=>x.id!=='${v.id}');svv();renderVTbl();toast('মুছে ফেলা','inf');}">মুছুন</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function renderRTbl() {
+  const tb=document.getElementById('rTbody');
+  if(!records.length){tb.innerHTML='<tr class="empty-row"><td colspan="7">কোনো রেকর্ড নেই</td></tr>';return;}
+  tb.innerHTML=[...records].reverse().map((r,i)=>{
+    const vu=users.find(u=>u.id===r.uid);
+    const vt=votes.find(v=>v.id===r.vid);
+    return `<tr>
+      <td>${i+1}</td>
+      <td><strong>${esc(vu?.name||r.name||'—')}</strong></td>
+      <td><span class="uid-chip">${esc(vu?.uid||r.uid_code||'—')}</span></td>
+      <td>${esc(vu?.mobile||r.mobile||'—')}</td>
+      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis">${esc(vt?.title||'—')}</td>
+      <td>${r.chosen.map(c=>`<span class="chip">${esc(c)}</span>`).join(' ')}</td>
+      <td style="font-size:.77rem;color:var(--text2)">${fmtDT(r.t)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderLTbl() {
+  const tb=document.getElementById('lTbody');
+  if(!logs.length){tb.innerHTML='<tr class="empty-row"><td colspan="4">কোনো লগ নেই</td></tr>';return;}
+  tb.innerHTML=logs.slice(0,80).map(l=>`<tr>
+    <td style="white-space:nowrap;font-size:.78rem">${fmtDT(l.t)}</td>
+    <td>${esc(l.u)}</td>
+    <td><span class="chip">${esc(l.action)}</span></td>
+    <td style="color:var(--text2)">${esc(l.detail)}</td>
+  </tr>`).join('');
+}
+
+// ================================================================
+//  HELPERS
+// ================================================================
+function status(v) {
+  if(v.status==='closed') return 'closed';
+  const now=new Date();
+  if(v.start && new Date(v.start)>now) return 'pending';
+  if(v.end   && new Date(v.end)<now)   return 'closed';
+  if(v.max   && totCount(v.id)>=v.max) return 'closed';
+  return 'active';
+}
+function totCount(id) { return records.filter(r=>r.vid===id).length; }
+function catLabel(c) { return {general:'সাধারণ',election:'নির্বাচন',survey:'জরিপ',poll:'পোল',decision:'সিদ্ধান্ত'}[c]||c; }
+function fmtDate(s) { try{ return new Date(s).toLocaleDateString('bn-BD',{day:'numeric',month:'short',year:'numeric'}); }catch{return s||'';} }
+function fmtDT(s)   { try{ return new Date(s).toLocaleString('bn-BD',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}); }catch{return s||'';} }
+function esc(s)     { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function cm(id)     { document.getElementById(id).classList.remove('open'); }
+
+function toast(msg, type='inf') {
+  const ic={ok:'✅',err:'❌',inf:'ℹ️'};
+  const tc=document.getElementById('toasts');
+  const el=document.createElement('div');
+  el.className=`toast ${type}`;
+  el.innerHTML=`<span>${ic[type]}</span><span>${msg}</span>`;
+  tc.appendChild(el);
+  setTimeout(()=>{ el.style.cssText='opacity:0;transform:translateX(16px);transition:.3s'; setTimeout(()=>el.remove(),300); },3200);
+}
+
+// Close on overlay click
+document.querySelectorAll('.moverlay').forEach(o=>o.addEventListener('click',e=>{ if(e.target===o){o.classList.remove('open');selCands=[];} }));
+
+// ================================================================
+//  INIT
+// ================================================================
+initEmailJS();
+// কোনো সার্ভিস কনফিগ থাকলে banner লুকাও
+if (ejConfig || brevoConfig || gmailConfig) document.getElementById('emailjsBox').style.display = 'none';
+// সক্রিয় ট্যাব হাইলাইট করো
+switchEmailTab(activeEmailService);
+if (sheetUrl) document.getElementById('setupBox').style.display = 'none';
+checkUrlParams(); // handle ?register=... URL
+</script>
+</body>
+</html>
